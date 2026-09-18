@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <!--
-  Ich bin ein Tensor, kein Skalar.
-  Ich messe Zug und Druck zugleich, an jedem Punkt, in jede Richtung.
-  Meine Divergenz verschwindet dort, wo alles im Gleichgewicht ruht.
-  Ich stehe schon am Ende dieser Seite — du musst mich nur noch erkennen.
-  Was bin ich?
+  I am a tensor, not a scalar.
+  I measure tension and compression at once, at every point, in every direction.
+  My divergence vanishes wherever everything rests in equilibrium.
+  I'm already sitting at the bottom of this page — you just have to recognize me.
+  What am I?
 -->
 <head>
 <meta charset="utf-8">
@@ -39,11 +39,6 @@
     font-family:var(--mono); font-size:0.85rem; color:var(--ink-dim);
     margin:14px 0 0 0;
   }
-  #hint{
-    font-family:var(--mono); font-size:0.72rem; color:var(--ink-dim);
-    margin-top:6px; opacity:0; transition:opacity .4s;
-  }
-  #hint.show{ opacity:0.7; }
 
   footer{
     position:fixed; bottom:16px; left:0; right:0;
@@ -56,25 +51,6 @@
   footer:hover #sigma-sim{ opacity:1; }
   @media (prefers-reduced-motion: reduce){
     #sigma-sim{ display:none; }
-  }
-
-  @keyframes shake{
-    0%{transform:translate(0,0);}
-    10%{transform:translate(-6px,2px);}
-    20%{transform:translate(5px,-3px);}
-    30%{transform:translate(-4px,4px);}
-    40%{transform:translate(6px,-2px);}
-    50%{transform:translate(-3px,3px);}
-    60%{transform:translate(4px,-4px);}
-    70%{transform:translate(-5px,2px);}
-    80%{transform:translate(3px,-3px);}
-    90%{transform:translate(-2px,1px);}
-    100%{transform:translate(0,0);}
-  }
-  body.konami{ animation:shake 0.6s ease; }
-  body.konami h1{ color:var(--accent); }
-  @media (prefers-reduced-motion: reduce){
-    body.konami{ animation:none; }
   }
 
   /* scroll progress — exponential convergence, not linear */
@@ -133,21 +109,20 @@
   <div id="two-clocks"></div>
 
   <h1 class="scramble" data-text="Malte Petersen"></h1>
-  <p>Seite im Aufbau.</p>
-  <div id="hint"></div>
+  <p>Site under construction.</p>
 
   <footer>
-    <canvas id="sigma-sim" width="160" height="28" aria-hidden="true"></canvas>
+    <canvas id="sigma-sim" width="160" height="40" aria-hidden="true"></canvas>
     <div>&#8711;&middot;&sigma; = 0</div>
   </footer>
 
   <button id="console-tab" type="button">~$</button>
   <div id="console-panel" hidden>
-    <button id="console-close" type="button" aria-label="Konsole schließen">&times;</button>
+    <button id="console-close" type="button" aria-label="Close console">&times;</button>
     <div id="console-log"></div>
     <form id="console-form">
       <span>~$</span>
-      <input id="console-input" type="text" autocomplete="off" spellcheck="false" aria-label="Befehl eingeben">
+      <input id="console-input" type="text" autocomplete="off" spellcheck="false" aria-label="Enter command">
     </form>
   </div>
 
@@ -194,11 +169,11 @@
   var input = document.getElementById('console-input');
 
   var COMMANDS = {
-    help: "Verfügbare Befehle: help, whoami, ls, cat masterarbeit.pdf, sudo hire --me, clear",
-    whoami: "malte — Mathematiker (M.Sc. Bonn) & Backend-Engineer. Mehr Infos: bald hier.",
-    ls: "index.html  404.html  robots.txt  (der Rest kommt noch)",
-    "cat masterarbeit.pdf": "Postprocessing gemischter elastischer Eigenwerte — Note 1,3. Volltext folgt an dieser Stelle.",
-    "sudo hire --me": "[sudo] password for malte: ...nicht nötig, einfach eine Nachricht schreiben."
+    help: "Available commands: help, whoami, ls, cat thesis.pdf, sudo hire --me, clear",
+    whoami: "malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.",
+    ls: "index.html  404.html  robots.txt  (more to come)",
+    "cat thesis.pdf": "Postprocessing of mixed elastic eigenvalues — grade 1.3. Full text coming soon.",
+    "sudo hire --me": "[sudo] password for malte: ...not required, just send a message."
   };
 
   function printLine(text, isCmd){
@@ -214,7 +189,7 @@
     panel.hidden = false;
     tab.hidden = true;
     if (log.children.length === 0){
-      printLine("Willkommen. Tippe 'help' für Befehle.");
+      printLine("Welcome. Type 'help' for commands.");
     }
     input.focus();
   }
@@ -235,7 +210,7 @@
       log.innerHTML = '';
     } else {
       var reply = COMMANDS[raw.toLowerCase()];
-      printLine(reply || ("Befehl nicht gefunden: " + raw + " — versuch's mit 'help'"));
+      printLine(reply || ("Command not found: " + raw + " — try 'help'"));
     }
     input.value = '';
   });
@@ -245,49 +220,12 @@
   };
 })();
 
-(function(){
-  var SEQUENCE = ["arrowup","arrowup","arrowdown","arrowdown","arrowleft","arrowright","arrowleft","arrowright","b","a"];
-  var buffer = [];
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var hint = document.getElementById('hint');
-
-  document.addEventListener('keydown', function(e){
-    var key = e.key.toLowerCase();
-    buffer.push(key);
-    if (buffer.length > SEQUENCE.length){ buffer.shift(); }
-    if (buffer.length === SEQUENCE.length && buffer.every(function(k, i){ return k === SEQUENCE[i]; })){
-      triggerKonami();
-      buffer = [];
-    }
-  });
-
-  function triggerKonami(){
-    document.body.classList.add('konami');
-    setTimeout(function(){ document.body.classList.remove('konami'); }, 650);
-
-    if (window._scrambleTitle){
-      window._scrambleTitle("Resonanzkatastrophe", reduceMotion ? 1 : 500);
-      setTimeout(function(){
-        window._scrambleTitle("Malte Petersen", reduceMotion ? 1 : 600);
-      }, 1000);
-    }
-
-    hint.textContent = "κ → ∞ — Verfahren stabilisiert sich wieder.";
-    hint.classList.add('show');
-    setTimeout(function(){ hint.classList.remove('show'); }, 2200);
-
-    if (window._consoleAnnounce){
-      window._consoleAnnounce("[system] Konami-Code erkannt — Resonanzkatastrophe simuliert.");
-    }
-  }
-})();
-
 /* two clocks — Europe/Berlin and America/Toronto, no labels */
 (function(){
   var el = document.getElementById('two-clocks');
   if (!el) return;
-  var fmtA = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
-  var fmtB = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Toronto' });
+  var fmtA = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+  var fmtB = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Toronto' });
   function render(){
     var now = new Date();
     el.textContent = fmtA.format(now) + "  ·  " + fmtB.format(now);
@@ -314,7 +252,9 @@
   render();
 })();
 
-/* sigma footer mini-simulation — damped mass-spring chain, clamped ends, settles to ∇·σ=0 */
+/* sigma footer mini-simulation — a small clamped elastic mesh (FEM-style), poked and
+   relaxing back to equilibrium: a physical picture of div(sigma) = 0. Edges are colored
+   by local stretch (tension) or compression while the mesh settles. */
 (function(){
   var canvas = document.getElementById('sigma-sim');
   var footer = canvas ? canvas.closest('footer') : null;
@@ -323,59 +263,116 @@
   if (reduceMotion) return;
 
   var ctx = canvas.getContext('2d');
-  var w = canvas.width, h = canvas.height, mid = h / 2;
-  var n = 24;
-  var y = new Array(n).fill(0);
-  var v = new Array(n).fill(0);
-  var k = 0.15;
-  var damping = 0.90;
-  var running = false;
-  var rafId = null;
+  var w = canvas.width, h = canvas.height;
+  var nx = 7, ny = 4;
+
+  var nodes = [];
+  for (var j = 0; j < ny; j++){
+    for (var i = 0; i < nx; i++){
+      var rx = (i / (nx - 1)) * w;
+      var ry = (j / (ny - 1)) * h;
+      var fixed = (i === 0 || i === nx - 1 || j === 0 || j === ny - 1);
+      nodes.push({ rx: rx, ry: ry, x: rx, y: ry, vx: 0, vy: 0, fixed: fixed });
+    }
+  }
+  function idx(i, j){ return j * nx + i; }
+
+  var springs = [];
+  var edges = []; // structural edges only — what we draw
+  function addSpring(a, b, draw){
+    var dx = nodes[b].rx - nodes[a].rx, dy = nodes[b].ry - nodes[a].ry;
+    var s = { a: a, b: b, rest: Math.sqrt(dx * dx + dy * dy) };
+    springs.push(s);
+    if (draw) edges.push(s);
+  }
+  for (var j = 0; j < ny; j++){
+    for (var i = 0; i < nx; i++){
+      if (i < nx - 1) addSpring(idx(i, j), idx(i + 1, j), true);
+      if (j < ny - 1) addSpring(idx(i, j), idx(i, j + 1), true);
+      if (i < nx - 1 && j < ny - 1){
+        addSpring(idx(i, j), idx(i + 1, j + 1), false);
+        addSpring(idx(i + 1, j), idx(i, j + 1), false);
+      }
+    }
+  }
+
+  var k = 0.05, damping = 0.92;
+  var running = false, rafId = null;
+  var cx = Math.floor(nx / 2), cy = Math.floor(ny / 2);
 
   function pluck(){
-    for (var i = 0; i < n; i++){ y[i] = 0; v[i] = 0; }
-    var c = Math.floor(n / 2);
-    y[c] = h * 0.4;
-    y[c - 1] = h * 0.22;
-    y[c + 1] = h * 0.22;
+    for (var n = 0; n < nodes.length; n++){
+      nodes[n].x = nodes[n].rx; nodes[n].y = nodes[n].ry;
+      nodes[n].vx = 0; nodes[n].vy = 0;
+    }
+    for (var j = 0; j < ny; j++){
+      for (var i = 0; i < nx; i++){
+        var d = Math.abs(i - cx) + Math.abs(j - cy);
+        if (d <= 2){
+          var node = nodes[idx(i, j)];
+          if (!node.fixed){ node.y += (1 - d / 3) * 12; }
+        }
+      }
+    }
   }
 
   function step(){
-    var newY = y.slice();
-    for (var i = 1; i < n - 1; i++){
-      var force = k * ((y[i - 1] - y[i]) + (y[i + 1] - y[i]));
-      v[i] = (v[i] + force) * damping;
-      newY[i] = y[i] + v[i];
+    var fx = new Array(nodes.length).fill(0);
+    var fy = new Array(nodes.length).fill(0);
+    for (var s = 0; s < springs.length; s++){
+      var sp = springs[s];
+      var A = nodes[sp.a], B = nodes[sp.b];
+      var dx = B.x - A.x, dy = B.y - A.y;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+      var diff = dist - sp.rest;
+      var ux = dx / dist, uy = dy / dist;
+      var fxa = k * diff * ux, fya = k * diff * uy;
+      fx[sp.a] += fxa; fy[sp.a] += fya;
+      fx[sp.b] -= fxa; fy[sp.b] -= fya;
     }
-    y = newY;
-    y[0] = 0; y[n - 1] = 0;
+    var maxAmp = 0;
+    for (var n = 0; n < nodes.length; n++){
+      var node = nodes[n];
+      if (node.fixed) continue;
+      node.vx = (node.vx + fx[n]) * damping;
+      node.vy = (node.vy + fy[n]) * damping;
+      node.x += node.vx;
+      node.y += node.vy;
+      var amp = Math.hypot(node.x - node.rx, node.y - node.ry);
+      if (amp > maxAmp) maxAmp = amp;
+    }
+    return maxAmp;
   }
 
   function draw(){
     ctx.clearRect(0, 0, w, h);
     var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#b6491f';
-    ctx.strokeStyle = accent;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (var i = 0; i < n; i++){
-      var x = (i / (n - 1)) * w;
-      var yy = mid - y[i];
-      if (i === 0){ ctx.moveTo(x, yy); } else { ctx.lineTo(x, yy); }
+    var accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#2c6e64';
+    var dim = getComputedStyle(document.documentElement).getPropertyValue('--ink-dim').trim() || '#6b6558';
+    ctx.lineWidth = 1.1;
+    for (var e = 0; e < edges.length; e++){
+      var sp = edges[e];
+      var A = nodes[sp.a], B = nodes[sp.b];
+      var dx = B.x - A.x, dy = B.y - A.y;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+      var diff = dist - sp.rest;
+      if (diff > 0.35){ ctx.strokeStyle = accent2; }
+      else if (diff < -0.35){ ctx.strokeStyle = accent; }
+      else { ctx.strokeStyle = dim; }
+      ctx.beginPath();
+      ctx.moveTo(A.x, A.y);
+      ctx.lineTo(B.x, B.y);
+      ctx.stroke();
     }
-    ctx.stroke();
   }
 
   function loop(){
-    step();
+    var amp = step();
     draw();
-    var amp = 0;
-    for (var i = 0; i < n; i++){ amp = Math.max(amp, Math.abs(y[i])); }
-    if (amp > 0.25){
+    if (amp > 0.2){
       rafId = requestAnimationFrame(loop);
     } else {
       running = false;
-      y = y.map(function(){ return 0; });
-      draw();
     }
   }
 
