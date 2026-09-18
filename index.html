@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="de">
 <!--
-  Hallo, Quelltext-Leser*in. Sieht aus, als hättest du Strg+U / Rechtsklick
-  benutzt statt einfach zu scrollen. Guter Instinkt.
-  Zwei Uhrzeiten oben rechts, keine Erklärung dazu — das bleibt so.
-  Der Rest der Seite ist noch im Aufbau. ∎
+  Ich bin ein Tensor, kein Skalar.
+  Ich messe Zug und Druck zugleich, an jedem Punkt, in jede Richtung.
+  Meine Divergenz verschwindet dort, wo alles im Gleichgewicht ruht.
+  Ich stehe schon am Ende dieser Seite — du musst mich nur noch erkennen.
+  Was bin ich?
 -->
 <head>
 <meta charset="utf-8">
@@ -43,9 +44,18 @@
     margin-top:6px; opacity:0; transition:opacity .4s;
   }
   #hint.show{ opacity:0.7; }
+
   footer{
     position:fixed; bottom:16px; left:0; right:0;
-    text-align:center; font-family:var(--mono); font-size:0.8rem; color:var(--ink-dim);
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-family:var(--mono); font-size:0.8rem; color:var(--ink-dim);
+  }
+  #sigma-sim{
+    display:block; opacity:0; transition:opacity .25s;
+  }
+  footer:hover #sigma-sim{ opacity:1; }
+  @media (prefers-reduced-motion: reduce){
+    #sigma-sim{ display:none; }
   }
 
   @keyframes shake{
@@ -125,7 +135,11 @@
   <h1 class="scramble" data-text="Malte Petersen"></h1>
   <p>Seite im Aufbau.</p>
   <div id="hint"></div>
-  <footer>&#8711;&middot;&sigma; = 0</footer>
+
+  <footer>
+    <canvas id="sigma-sim" width="160" height="28" aria-hidden="true"></canvas>
+    <div>&#8711;&middot;&sigma; = 0</div>
+  </footer>
 
   <button id="console-tab" type="button">~$</button>
   <div id="console-panel" hidden>
@@ -298,6 +312,84 @@
   document.addEventListener('scroll', render, { passive: true });
   window.addEventListener('resize', render);
   render();
+})();
+
+/* sigma footer mini-simulation — damped mass-spring chain, clamped ends, settles to ∇·σ=0 */
+(function(){
+  var canvas = document.getElementById('sigma-sim');
+  var footer = canvas ? canvas.closest('footer') : null;
+  if (!canvas || !footer) return;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height, mid = h / 2;
+  var n = 24;
+  var y = new Array(n).fill(0);
+  var v = new Array(n).fill(0);
+  var k = 0.15;
+  var damping = 0.90;
+  var running = false;
+  var rafId = null;
+
+  function pluck(){
+    for (var i = 0; i < n; i++){ y[i] = 0; v[i] = 0; }
+    var c = Math.floor(n / 2);
+    y[c] = h * 0.4;
+    y[c - 1] = h * 0.22;
+    y[c + 1] = h * 0.22;
+  }
+
+  function step(){
+    var newY = y.slice();
+    for (var i = 1; i < n - 1; i++){
+      var force = k * ((y[i - 1] - y[i]) + (y[i + 1] - y[i]));
+      v[i] = (v[i] + force) * damping;
+      newY[i] = y[i] + v[i];
+    }
+    y = newY;
+    y[0] = 0; y[n - 1] = 0;
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, w, h);
+    var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#b6491f';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (var i = 0; i < n; i++){
+      var x = (i / (n - 1)) * w;
+      var yy = mid - y[i];
+      if (i === 0){ ctx.moveTo(x, yy); } else { ctx.lineTo(x, yy); }
+    }
+    ctx.stroke();
+  }
+
+  function loop(){
+    step();
+    draw();
+    var amp = 0;
+    for (var i = 0; i < n; i++){ amp = Math.max(amp, Math.abs(y[i])); }
+    if (amp > 0.25){
+      rafId = requestAnimationFrame(loop);
+    } else {
+      running = false;
+      y = y.map(function(){ return 0; });
+      draw();
+    }
+  }
+
+  function start(){
+    if (running) return;
+    running = true;
+    if (rafId) cancelAnimationFrame(rafId);
+    pluck();
+    loop();
+  }
+
+  draw();
+  footer.addEventListener('mouseenter', start);
+  footer.addEventListener('touchstart', start, { passive: true });
 })();
 </script>
 </body>
