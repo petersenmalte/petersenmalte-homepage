@@ -134,10 +134,9 @@
   var input = document.getElementById('console-input');
 
   var COMMANDS = {
-    help: "Available commands: help, whoami, ls, cat masterthesis.pdf, sudo hire --me, clear",
+    help: "Available commands: help, whoami, ls, sudo hire --me, clear",
     whoami: "malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.",
     ls: "index.html  404.html  robots.txt  (more to come)",
-    "cat masterthesis.pdf": "cat: masterthesis.pdf: Permission denied",
     "sudo hire --me": "[sudo] password for malte: ...not required, just send a message."
   };
 
@@ -217,10 +216,12 @@
    relaxing back to equilibrium: a physical picture of div(sigma) = 0. Edges are colored
    by local stretch (tension) or compression while the mesh settles.
 
-   Integrator: Verlet integration (implicit velocity via previous position) plus a few
-   Gauss-Seidel distance-constraint relaxation passes per frame — the standard, well-tested
+   Integrator: Verlet integration (implicit velocity via previous position) plus one
+   Gauss-Seidel distance-constraint relaxation pass per frame — the standard, well-tested
    method behind most real-time cloth/soft-body simulations (Thomas Jakobsen,
-   "Advanced Character Physics", 2001), used here instead of a hand-rolled force integrator. */
+   "Advanced Character Physics", 2001), used here instead of a hand-rolled force integrator.
+   Damping is kept high (little energy loss per frame) so the settle is slow enough to
+   actually see: several visible bounces over roughly two seconds. */
 (function(){
   var canvas = document.getElementById('sigma-sim');
   var footer = canvas ? canvas.closest('footer') : null;
@@ -255,10 +256,10 @@
     }
   }
 
-  var DAMPING = 0.96;
-  var STIFFNESS = 0.5;
-  var RELAXATION_ITERATIONS = 2;
-  var MAX_DEVIATION = 28;
+  var DAMPING = 0.985;
+  var STIFFNESS = 0.2;
+  var RELAXATION_ITERATIONS = 1;
+  var MAX_DEVIATION = 18;
   var cx = Math.floor(nx / 2), cy = Math.floor(ny / 2);
   var running = false, rafId = null;
 
@@ -272,7 +273,7 @@
         var d = Math.abs(i - cx) + Math.abs(j - cy);
         if (d <= 2){
           var node = nodes[idx(i, j)];
-          if (!node.fixed){ node.y += (1 - d / 3) * 12; }
+          if (!node.fixed){ node.y += (1 - d / 3) * 10; }
         }
       }
     }
