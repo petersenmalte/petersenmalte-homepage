@@ -139,6 +139,11 @@
     ls: "index.html  404.html  robots.txt  (more to come)",
     "sudo hire --me": "[sudo] password for malte: ...not required, just send a message."
   };
+  var COMMAND_NAMES = Object.keys(COMMANDS).concat(['clear']);
+
+  var history = [];
+  var historyIndex = 0; // === history.length means "not currently recalling"
+  var draft = '';
 
   function printLine(text, isCmd){
     var line = document.createElement('div');
@@ -153,7 +158,7 @@
     panel.hidden = false;
     tab.hidden = true;
     if (log.children.length === 0){
-      printLine("Welcome. Type 'help' for commands.");
+      printLine("Welcome. Type 'help' for commands. ↑/↓ for history, Tab to complete.");
     }
     input.focus();
   }
@@ -165,11 +170,42 @@
   tab.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
 
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      if (history.length === 0) return;
+      if (historyIndex === history.length){ draft = input.value; }
+      historyIndex = Math.max(0, historyIndex - 1);
+      input.value = history[historyIndex];
+      input.setSelectionRange(input.value.length, input.value.length);
+    } else if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      if (historyIndex >= history.length) return;
+      historyIndex++;
+      input.value = historyIndex === history.length ? draft : history[historyIndex];
+      input.setSelectionRange(input.value.length, input.value.length);
+    } else if (e.key === 'Tab'){
+      e.preventDefault();
+      var val = input.value.toLowerCase();
+      if (!val) return;
+      var matches = COMMAND_NAMES.filter(function(c){ return c.indexOf(val) === 0; });
+      if (matches.length === 1){
+        input.value = matches[0];
+        input.setSelectionRange(input.value.length, input.value.length);
+      } else if (matches.length > 1){
+        printLine(matches.join('   '));
+      }
+    }
+  });
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var raw = input.value.trim();
     if (!raw) return;
     printLine(raw, true);
+    history.push(raw);
+    historyIndex = history.length;
+    draft = '';
     if (raw === 'clear'){
       log.innerHTML = '';
     } else {
