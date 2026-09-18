@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="en">
 <!--
-  I am a tensor, not a scalar.
-  I measure tension and compression at once, at every point, in every direction.
-  My divergence vanishes wherever everything rests in equilibrium.
-  I'm already sitting at the bottom of this page — you just have to recognize me.
+  I vanish the instant this page opens its eyes.
+  No visitor has ever seen me standing in the light.
+  Yet I have always been exactly where you are looking right now.
   What am I?
 -->
 <head>
@@ -33,7 +32,6 @@
     font-family:var(--serif); font-weight:600;
     font-size:clamp(2rem, 8vw, 3.2rem);
     margin:0; min-height:1.2em;
-    transition:color .3s;
   }
   p{
     font-family:var(--mono); font-size:0.85rem; color:var(--ink-dim);
@@ -108,11 +106,11 @@
   <div id="progress-bar"></div>
   <div id="two-clocks"></div>
 
-  <h1 class="scramble" data-text="Malte Petersen"></h1>
+  <h1>Malte Petersen</h1>
   <p>Site under construction.</p>
 
   <footer>
-    <canvas id="sigma-sim" width="160" height="40" aria-hidden="true"></canvas>
+    <canvas id="sigma-sim" width="160" height="48" aria-hidden="true"></canvas>
     <div>&#8711;&middot;&sigma; = 0</div>
   </footer>
 
@@ -128,39 +126,6 @@
 
 <script>
 (function(){
-  var CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function scramble(el, text, duration){
-    if (reduceMotion){ el.textContent = text; return; }
-    var frame = 0;
-    var totalFrames = Math.round(duration / 30);
-    var resolved = new Array(text.length).fill(false);
-    var timer = setInterval(function(){
-      frame++;
-      var out = "";
-      for (var i = 0; i < text.length; i++){
-        if (text[i] === " "){ out += " "; continue; }
-        var revealAt = (i / text.length) * totalFrames * 0.7;
-        if (frame >= revealAt + totalFrames * 0.3){ resolved[i] = true; }
-        out += resolved[i] ? text[i] : CHARS[Math.floor(Math.random() * CHARS.length)];
-      }
-      el.textContent = out;
-      if (frame >= totalFrames){
-        clearInterval(timer);
-        el.textContent = text;
-      }
-    }, 30);
-  }
-  var el = document.querySelector('.scramble');
-  if (el){
-    var text = el.getAttribute('data-text') || '';
-    setTimeout(function(){ scramble(el, text, 700); }, 150);
-  }
-
-  window._scrambleTitle = function(text, duration){ scramble(el, text, duration); };
-})();
-
-(function(){
   var tab = document.getElementById('console-tab');
   var panel = document.getElementById('console-panel');
   var closeBtn = document.getElementById('console-close');
@@ -169,10 +134,10 @@
   var input = document.getElementById('console-input');
 
   var COMMANDS = {
-    help: "Available commands: help, whoami, ls, cat thesis.pdf, sudo hire --me, clear",
+    help: "Available commands: help, whoami, ls, cat masterthesis.pdf, sudo hire --me, clear",
     whoami: "malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.",
     ls: "index.html  404.html  robots.txt  (more to come)",
-    "cat thesis.pdf": "Postprocessing of mixed elastic eigenvalues — grade 1.3. Full text coming soon.",
+    "cat masterthesis.pdf": "cat: masterthesis.pdf: Permission denied",
     "sudo hire --me": "[sudo] password for malte: ...not required, just send a message."
   };
 
@@ -214,10 +179,6 @@
     }
     input.value = '';
   });
-
-  window._consoleAnnounce = function(text){
-    if (!panel.hidden){ printLine(text); }
-  };
 })();
 
 /* two clocks — Europe/Berlin and America/Toronto, no labels */
@@ -254,7 +215,12 @@
 
 /* sigma footer mini-simulation — a small clamped elastic mesh (FEM-style), poked and
    relaxing back to equilibrium: a physical picture of div(sigma) = 0. Edges are colored
-   by local stretch (tension) or compression while the mesh settles. */
+   by local stretch (tension) or compression while the mesh settles.
+
+   Integrator: Verlet integration (implicit velocity via previous position) plus one
+   Gauss-Seidel distance-constraint relaxation pass per frame — the standard, well-tested
+   method behind most real-time cloth/soft-body simulations (Thomas Jakobsen,
+   "Advanced Character Physics", 2001), used here instead of a hand-rolled force integrator. */
 (function(){
   var canvas = document.getElementById('sigma-sim');
   var footer = canvas ? canvas.closest('footer') : null;
@@ -272,74 +238,81 @@
       var rx = (i / (nx - 1)) * w;
       var ry = (j / (ny - 1)) * h;
       var fixed = (i === 0 || i === nx - 1 || j === 0 || j === ny - 1);
-      nodes.push({ rx: rx, ry: ry, x: rx, y: ry, vx: 0, vy: 0, fixed: fixed });
+      nodes.push({ rx: rx, ry: ry, x: rx, y: ry, px: rx, py: ry, fixed: fixed });
     }
   }
   function idx(i, j){ return j * nx + i; }
 
-  var springs = [];
-  var edges = []; // structural edges only — what we draw
-  function addSpring(a, b, draw){
+  var constraints = [];
+  function addConstraint(a, b){
     var dx = nodes[b].rx - nodes[a].rx, dy = nodes[b].ry - nodes[a].ry;
-    var s = { a: a, b: b, rest: Math.sqrt(dx * dx + dy * dy) };
-    springs.push(s);
-    if (draw) edges.push(s);
+    constraints.push({ a: a, b: b, rest: Math.sqrt(dx * dx + dy * dy) });
   }
   for (var j = 0; j < ny; j++){
     for (var i = 0; i < nx; i++){
-      if (i < nx - 1) addSpring(idx(i, j), idx(i + 1, j), true);
-      if (j < ny - 1) addSpring(idx(i, j), idx(i, j + 1), true);
-      if (i < nx - 1 && j < ny - 1){
-        addSpring(idx(i, j), idx(i + 1, j + 1), false);
-        addSpring(idx(i + 1, j), idx(i, j + 1), false);
-      }
+      if (i < nx - 1) addConstraint(idx(i, j), idx(i + 1, j));
+      if (j < ny - 1) addConstraint(idx(i, j), idx(i, j + 1));
     }
   }
 
-  var k = 0.05, damping = 0.92;
-  var running = false, rafId = null;
+  var DAMPING = 0.965;
+  var STIFFNESS = 0.42;
+  var MAX_DEVIATION = 18;
   var cx = Math.floor(nx / 2), cy = Math.floor(ny / 2);
+  var running = false, rafId = null;
 
   function pluck(){
     for (var n = 0; n < nodes.length; n++){
       nodes[n].x = nodes[n].rx; nodes[n].y = nodes[n].ry;
-      nodes[n].vx = 0; nodes[n].vy = 0;
+      nodes[n].px = nodes[n].rx; nodes[n].py = nodes[n].ry;
     }
     for (var j = 0; j < ny; j++){
       for (var i = 0; i < nx; i++){
         var d = Math.abs(i - cx) + Math.abs(j - cy);
         if (d <= 2){
           var node = nodes[idx(i, j)];
-          if (!node.fixed){ node.y += (1 - d / 3) * 12; }
+          if (!node.fixed){ node.y += (1 - d / 3) * 8; }
         }
       }
     }
   }
 
   function step(){
-    var fx = new Array(nodes.length).fill(0);
-    var fy = new Array(nodes.length).fill(0);
-    for (var s = 0; s < springs.length; s++){
-      var sp = springs[s];
-      var A = nodes[sp.a], B = nodes[sp.b];
+    for (var n = 0; n < nodes.length; n++){
+      var node = nodes[n];
+      if (node.fixed) continue;
+      var vx = (node.x - node.px) * DAMPING;
+      var vy = (node.y - node.py) * DAMPING;
+      node.px = node.x; node.py = node.y;
+      node.x += vx; node.y += vy;
+    }
+    for (var c = 0; c < constraints.length; c++){
+      var con = constraints[c];
+      var A = nodes[con.a], B = nodes[con.b];
       var dx = B.x - A.x, dy = B.y - A.y;
       var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
-      var diff = dist - sp.rest;
-      var ux = dx / dist, uy = dy / dist;
-      var fxa = k * diff * ux, fya = k * diff * uy;
-      fx[sp.a] += fxa; fy[sp.a] += fya;
-      fx[sp.b] -= fxa; fy[sp.b] -= fya;
+      var diff = ((dist - con.rest) / dist) * STIFFNESS;
+      var invA = A.fixed ? 0 : 1, invB = B.fixed ? 0 : 1;
+      var sum = invA + invB;
+      if (sum === 0) continue;
+      var wA = invA / sum, wB = invB / sum;
+      var cxAdj = diff * dx, cyAdj = diff * dy;
+      A.x += cxAdj * wA; A.y += cyAdj * wA;
+      B.x -= cxAdj * wB; B.y -= cyAdj * wB;
     }
     var maxAmp = 0;
     for (var n = 0; n < nodes.length; n++){
       var node = nodes[n];
       if (node.fixed) continue;
-      node.vx = (node.vx + fx[n]) * damping;
-      node.vy = (node.vy + fy[n]) * damping;
-      node.x += node.vx;
-      node.y += node.vy;
-      var amp = Math.hypot(node.x - node.rx, node.y - node.ry);
-      if (amp > maxAmp) maxAmp = amp;
+      var ddx = node.x - node.rx, ddy = node.y - node.ry;
+      var dev = Math.hypot(ddx, ddy);
+      if (dev > MAX_DEVIATION){
+        var f = MAX_DEVIATION / dev;
+        node.x = node.rx + ddx * f;
+        node.y = node.ry + ddy * f;
+        dev = MAX_DEVIATION;
+      }
+      if (dev > maxAmp) maxAmp = dev;
     }
     return maxAmp;
   }
@@ -350,14 +323,14 @@
     var accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#2c6e64';
     var dim = getComputedStyle(document.documentElement).getPropertyValue('--ink-dim').trim() || '#6b6558';
     ctx.lineWidth = 1.1;
-    for (var e = 0; e < edges.length; e++){
-      var sp = edges[e];
-      var A = nodes[sp.a], B = nodes[sp.b];
+    for (var c = 0; c < constraints.length; c++){
+      var con = constraints[c];
+      var A = nodes[con.a], B = nodes[con.b];
       var dx = B.x - A.x, dy = B.y - A.y;
       var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
-      var diff = dist - sp.rest;
-      if (diff > 0.35){ ctx.strokeStyle = accent2; }
-      else if (diff < -0.35){ ctx.strokeStyle = accent; }
+      var diff = dist - con.rest;
+      if (diff > 0.3){ ctx.strokeStyle = accent2; }
+      else if (diff < -0.3){ ctx.strokeStyle = accent; }
       else { ctx.strokeStyle = dim; }
       ctx.beginPath();
       ctx.moveTo(A.x, A.y);
@@ -369,7 +342,7 @@
   function loop(){
     var amp = step();
     draw();
-    if (amp > 0.2){
+    if (amp > 0.15){
       rafId = requestAnimationFrame(loop);
     } else {
       running = false;
