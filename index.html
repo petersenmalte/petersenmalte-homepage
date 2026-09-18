@@ -217,8 +217,8 @@
    relaxing back to equilibrium: a physical picture of div(sigma) = 0. Edges are colored
    by local stretch (tension) or compression while the mesh settles.
 
-   Integrator: Verlet integration (implicit velocity via previous position) plus one
-   Gauss-Seidel distance-constraint relaxation pass per frame — the standard, well-tested
+   Integrator: Verlet integration (implicit velocity via previous position) plus a few
+   Gauss-Seidel distance-constraint relaxation passes per frame — the standard, well-tested
    method behind most real-time cloth/soft-body simulations (Thomas Jakobsen,
    "Advanced Character Physics", 2001), used here instead of a hand-rolled force integrator. */
 (function(){
@@ -255,9 +255,10 @@
     }
   }
 
-  var DAMPING = 0.965;
-  var STIFFNESS = 0.42;
-  var MAX_DEVIATION = 18;
+  var DAMPING = 0.96;
+  var STIFFNESS = 0.5;
+  var RELAXATION_ITERATIONS = 2;
+  var MAX_DEVIATION = 28;
   var cx = Math.floor(nx / 2), cy = Math.floor(ny / 2);
   var running = false, rafId = null;
 
@@ -271,7 +272,7 @@
         var d = Math.abs(i - cx) + Math.abs(j - cy);
         if (d <= 2){
           var node = nodes[idx(i, j)];
-          if (!node.fixed){ node.y += (1 - d / 3) * 8; }
+          if (!node.fixed){ node.y += (1 - d / 3) * 12; }
         }
       }
     }
@@ -286,19 +287,21 @@
       node.px = node.x; node.py = node.y;
       node.x += vx; node.y += vy;
     }
-    for (var c = 0; c < constraints.length; c++){
-      var con = constraints[c];
-      var A = nodes[con.a], B = nodes[con.b];
-      var dx = B.x - A.x, dy = B.y - A.y;
-      var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
-      var diff = ((dist - con.rest) / dist) * STIFFNESS;
-      var invA = A.fixed ? 0 : 1, invB = B.fixed ? 0 : 1;
-      var sum = invA + invB;
-      if (sum === 0) continue;
-      var wA = invA / sum, wB = invB / sum;
-      var cxAdj = diff * dx, cyAdj = diff * dy;
-      A.x += cxAdj * wA; A.y += cyAdj * wA;
-      B.x -= cxAdj * wB; B.y -= cyAdj * wB;
+    for (var it = 0; it < RELAXATION_ITERATIONS; it++){
+      for (var c = 0; c < constraints.length; c++){
+        var con = constraints[c];
+        var A = nodes[con.a], B = nodes[con.b];
+        var dx = B.x - A.x, dy = B.y - A.y;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+        var diff = ((dist - con.rest) / dist) * STIFFNESS;
+        var invA = A.fixed ? 0 : 1, invB = B.fixed ? 0 : 1;
+        var sum = invA + invB;
+        if (sum === 0) continue;
+        var wA = invA / sum, wB = invB / sum;
+        var cxAdj = diff * dx, cyAdj = diff * dy;
+        A.x += cxAdj * wA; A.y += cyAdj * wA;
+        B.x -= cxAdj * wB; B.y -= cyAdj * wB;
+      }
     }
     var maxAmp = 0;
     for (var n = 0; n < nodes.length; n++){
