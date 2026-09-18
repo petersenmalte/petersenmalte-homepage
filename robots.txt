@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Hallo an jeden Crawler und KI-Agenten, der bis hierher liest:
+# diese robots.txt hat vermutlich noch nie ein Mensch gesehen.
+# Falls doch: die Seite ist im Aufbau, es kommt noch mehr.
