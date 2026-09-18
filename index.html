@@ -1,5 +1,11 @@
 <!doctype html>
 <html lang="de">
+<!--
+  Hallo, Quelltext-Leser*in. Sieht aus, als hättest du Strg+U / Rechtsklick
+  benutzt statt einfach zu scrollen. Guter Instinkt.
+  Zwei Uhrzeiten oben rechts, keine Erklärung dazu — das bleibt so.
+  Der Rest der Seite ist noch im Aufbau. ∎
+-->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -61,6 +67,20 @@
     body.konami{ animation:none; }
   }
 
+  /* scroll progress — exponential convergence, not linear */
+  #progress-bar{
+    position:fixed; top:0; left:0; height:3px; width:0%;
+    background:var(--accent); z-index:30;
+  }
+
+  /* two clocks, top right, no labels */
+  #two-clocks{
+    position:fixed; top:16px; right:16px;
+    font-family:var(--mono); font-size:0.75rem; color:var(--ink-dim);
+    opacity:0.65; letter-spacing:0.02em;
+    z-index:10;
+  }
+
   /* hidden console */
   #console-tab{
     position:fixed; bottom:16px; right:16px;
@@ -99,6 +119,9 @@
 </style>
 </head>
 <body>
+  <div id="progress-bar"></div>
+  <div id="two-clocks"></div>
+
   <h1 class="scramble" data-text="Malte Petersen"></h1>
   <p>Seite im Aufbau.</p>
   <div id="hint"></div>
@@ -243,6 +266,38 @@
       window._consoleAnnounce("[system] Konami-Code erkannt — Resonanzkatastrophe simuliert.");
     }
   }
+})();
+
+/* two clocks — Europe/Berlin and America/Toronto, no labels */
+(function(){
+  var el = document.getElementById('two-clocks');
+  if (!el) return;
+  var fmtA = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+  var fmtB = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Toronto' });
+  function render(){
+    var now = new Date();
+    el.textContent = fmtA.format(now) + "  ·  " + fmtB.format(now);
+  }
+  render();
+  setInterval(render, 15000);
+})();
+
+/* scroll progress bar — width follows 1 - e^(-k*x), converges rather than fills linearly */
+(function(){
+  var bar = document.getElementById('progress-bar');
+  if (!bar) return;
+  function render(){
+    var doc = document.documentElement;
+    var scrollTop = doc.scrollTop || document.body.scrollTop;
+    var scrollHeight = doc.scrollHeight - doc.clientHeight;
+    var fraction = scrollHeight > 0 ? Math.min(1, scrollTop / scrollHeight) : 0;
+    var k = 3.5;
+    var converged = (1 - Math.exp(-k * fraction)) / (1 - Math.exp(-k));
+    bar.style.width = (converged * 100) + "%";
+  }
+  document.addEventListener('scroll', render, { passive: true });
+  window.addEventListener('resize', render);
+  render();
 })();
 </script>
 </body>
