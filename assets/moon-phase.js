@@ -10,15 +10,15 @@ function describeMoon(phase, fraction) {
   const percentage = Math.round(fraction * 100);
   let name;
 
-  if (percentage <= 1) name = "Neumond";
-  else if (percentage >= 99) name = "Vollmond";
+  if (percentage <= 1) name = "New moon";
+  else if (percentage >= 99) name = "Full moon";
   else if (phase < 0.5) {
-    name = percentage < 48 ? "Zunehmende Sichel" : percentage <= 52 ? "Zunehmender Halbmond" : "Zunehmender Mond";
+    name = percentage < 48 ? "Waxing crescent" : percentage <= 52 ? "First quarter" : "Waxing moon";
   } else {
-    name = percentage < 48 ? "Abnehmende Sichel" : percentage <= 52 ? "Abnehmender Halbmond" : "Abnehmender Mond";
+    name = percentage < 48 ? "Waning crescent" : percentage <= 52 ? "Last quarter" : "Waning moon";
   }
 
-  return name + " – " + percentage + " % beleuchtet";
+  return name + " – " + percentage + "% illuminated";
 }
 
 function moonPath(fraction, waxing) {
@@ -46,7 +46,7 @@ export function mountMoonPhaseSymbol(container, location = MOON_LOCATION) {
   const symbol = document.createElement("span");
   symbol.className = "moon-phase";
   symbol.setAttribute("role", "img");
-  symbol.title = "Mondphase für " + location.name;
+  symbol.title = "Moon phase for " + location.name;
   container.appendChild(symbol);
 
   function render() {
