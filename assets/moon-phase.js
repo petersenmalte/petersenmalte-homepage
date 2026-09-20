@@ -36,9 +36,9 @@ export function getMoonState(date = new Date(), location = MOON_LOCATION) {
     fraction: illumination.fraction,
     waxing,
     label: describeMoon(illumination.phase, illumination.fraction),
-    // SunCalc's limb angle is corrected by the local parallactic angle so the
-    // illuminated edge follows the observer's sky orientation (Berlin here).
-    rotation: (illumination.angle - moonPosition.parallacticAngle) * 180 / Math.PI
+    // SunCalc yields the bright-limb zenith angle anticlockwise. SVG rotates
+    // clockwise from its positive x-axis, so invert it and offset right → up.
+    rotation: -(illumination.angle - moonPosition.parallacticAngle) * 180 / Math.PI - 90
   };
 }
 
