@@ -51,7 +51,6 @@
       var line = document.createElement('div');
       if (isCommand) line.className = 'cmd';
       line.textContent = text;
-      line.style.marginBottom = '8px';
       log.appendChild(line);
       log.scrollTop = log.scrollHeight;
     }
