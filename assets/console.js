@@ -2,7 +2,16 @@
   'use strict';
 
   var STATE_KEY = 'petersenmalte-console-navigation-state';
-  var pages = ['index.html', 'education.html', 'work.html', 'writing.html', 'falk.html', '404.html'];
+  // Canonical names carry no extension; `file` is what actually gets requested.
+  var PAGES = [
+    { name: 'index', file: 'index.html' },
+    { name: 'education', file: 'education.html' },
+    { name: 'work', file: 'work.html' },
+    { name: 'writing', file: 'writing.html' },
+    { name: 'falk', file: 'falk.html' },
+    { name: '404', file: '404.html' }
+  ];
+  var pageNames = PAGES.map(function (page) { return page.name; });
   var config = window.__CONSOLE_CONFIG__ || {};
   var CALLMEBOT_PHONE = config.callmebotPhone || '4915731310946';
   var CALLMEBOT_APIKEY = config.callmebotApiKey || '7598885';
@@ -49,8 +58,8 @@
 
     function showHome() {
       log.replaceChildren();
-      printLine('/\n' + pages.map(function (page, index) {
-        return (index === pages.length - 1 ? '└── ' : '├── ') + page;
+      printLine('/\n' + pageNames.map(function (name, index) {
+        return (index === pageNames.length - 1 ? '└── ' : '├── ') + name;
       }).join('\n'));
       printLine("Type 'help' for commands.");
     }
@@ -120,16 +129,24 @@
       }
     }
 
-    function tryOpen(target) {
-      var normalized = target.toLowerCase().replace(/^(\.\/|\/)/, '');
-      if (!normalized) normalized = 'index.html';
-      if (normalized.indexOf('.') === -1) normalized += '.html';
-      if (pages.indexOf(normalized) === -1) {
+    function resolvePage(target) {
+      var normalized = target.toLowerCase().replace(/^(\.\/|\/)/, '').trim();
+      if (!normalized || normalized === '.' || normalized === '..') normalized = 'index';
+      normalized = normalized.replace(/\.html$/, '');
+      for (var i = 0; i < PAGES.length; i++) {
+        if (PAGES[i].name === normalized) return PAGES[i];
+      }
+      return null;
+    }
+
+    function tryCd(target) {
+      var match = resolvePage(target);
+      if (!match) {
         printLine('No such page: ' + target);
         return;
       }
       saveNavigationState();
-      window.location.assign(normalized);
+      window.location.assign(match.file);
     }
 
     function sendMessage(message) {
@@ -189,19 +206,19 @@
     }
 
     var commands = {
-      help: 'Available commands: help, whoami, ls, open <page>, mail, clear',
+      help: 'Available commands: help, whoami, ls, cd <page>, mail, clear',
       whoami: 'malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.',
-      ls: pages.join('  '),
+      ls: pageNames.join('  '),
       'sudo hire --me': '[sudo] password for malte: ...not required, just send a message.'
     };
-    var commandNames = Object.keys(commands).concat(['open', 'mail', 'clear']);
+    var commandNames = Object.keys(commands).concat(['cd', 'mail', 'clear']);
 
     function execute(raw) {
       if (wizard) return continueMailWizard(raw);
       if (raw.toLowerCase() === 'clear') { showHome(); return; }
       if (raw.toLowerCase() === 'mail') { startMailWizard(); return; }
-      var match = /^(open)\s+(.+)$/i.exec(raw);
-      if (match) { tryOpen(match[2].trim()); return; }
+      var match = /^(cd)\s+(.+)$/i.exec(raw);
+      if (match) { tryCd(match[2].trim()); return; }
       var reply = commands[raw.toLowerCase()];
       printLine(reply || ('Command not found: ' + raw + " — try 'help'"));
     }
@@ -233,10 +250,10 @@
         event.preventDefault();
         var value = input.value.toLowerCase();
         if (!value) return;
-        var fileCommand = /^(open)\s+(.*)$/i.exec(input.value);
+        var fileCommand = /^(cd)\s+(.*)$/i.exec(input.value);
         var prefix = fileCommand ? fileCommand[2].replace(/^(\.\/|\/)/, '').toLowerCase() : value;
         var pathPrefix = fileCommand ? (fileCommand[2].match(/^(\.\/|\/)/) || [''])[0] : '';
-        var matches = (fileCommand ? pages : commandNames).filter(function (entry) {
+        var matches = (fileCommand ? pageNames : commandNames).filter(function (entry) {
           return entry.indexOf(prefix) === 0;
         });
         if (matches.length === 1) input.value = fileCommand ? fileCommand[1] + ' ' + pathPrefix + matches[0] : matches[0];
