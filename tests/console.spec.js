@@ -87,7 +87,8 @@ test('console survives commands and normal links with identical size and history
   await expect(page.locator('#console-log')).toContainText('mathematician');
   expect(await page.locator('#console-panel').boundingBox()).toEqual(size);
   await input.fill('unfinished command');
-  await page.getByRole('link', { name: /convergence explorer/i }).click();
+  await page.getByRole('link', { name: /back/i }).click();
+  await page.locator('#falk-link').click();
   await expect(page).toHaveURL(/falk\.html$/);
   await expect(page.locator('#console-panel')).toBeVisible();
   expect(await page.locator('#console-panel').boundingBox()).toEqual(size);
