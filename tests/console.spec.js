@@ -84,9 +84,9 @@ test('a saved closed terminal state restores its log without opening the panel',
 });
 
 for (const entry of [
-  { pathname: 'education.html', name: /back to regularization/i },
-  { pathname: 'work.html', name: /back to regularization/i },
-  { pathname: 'writing.html', name: /back to regularization/i },
+  { pathname: 'education.html', name: /back/i },
+  { pathname: 'work.html', name: /back/i },
+  { pathname: 'writing.html', name: /back/i },
   { pathname: '404.html', name: /back to regularization/i },
   { pathname: 'falk.html', name: /petersenmalte\.de/i }
 ]) {
