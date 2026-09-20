@@ -2,7 +2,7 @@
   'use strict';
 
   var STATE_KEY = 'petersenmalte-console-navigation-state';
-  var pages = ['index.html', 'education.html', 'work.html', 'writing.html', '404.html'];
+  var pages = ['index.html', 'education.html', 'work.html', 'writing.html', 'falk.html', '404.html'];
   var config = window.__CONSOLE_CONFIG__ || {};
   var CALLMEBOT_PHONE = config.callmebotPhone || '4915731310946';
   var CALLMEBOT_APIKEY = config.callmebotApiKey || '7598885';
@@ -47,41 +47,83 @@
       log.scrollTop = log.scrollHeight;
     }
 
+    function showHome() {
+      log.replaceChildren();
+      printLine('/\n' + pages.map(function (page, index) {
+        return (index === pages.length - 1 ? '└── ' : '├── ') + page;
+      }).join('\n'));
+      printLine("Type 'help' for commands.");
+    }
+
     function open() {
       panel.hidden = false;
       tab.hidden = true;
-      if (!log.children.length) {
-        printLine('/\n├── index.html\n├── education.html\n├── work.html\n├── writing.html\n└── 404.html');
-        printLine("Type 'help' for commands.");
-      }
+      if (!log.children.length) showHome();
       input.focus();
+      saveNavigationState();
     }
 
     function close() {
       panel.hidden = true;
       tab.hidden = false;
+      saveNavigationState();
     }
 
     function restoreNavigationState() {
-      var raw = sessionStorage.getItem(STATE_KEY);
-      if (!raw) return;
-      sessionStorage.removeItem(STATE_KEY);
       try {
+        var raw = sessionStorage.getItem(STATE_KEY);
+        if (!raw) return;
         var state = JSON.parse(raw);
-        if (typeof state.log === 'string') log.innerHTML = state.log;
-        if (state.open) open(); else close();
+        // Read old snapshots as inert text; never inject storage as live HTML.
+        var lines = state.lines;
+        if (!Array.isArray(lines) && typeof state.log === 'string') {
+          var legacy = new DOMParser().parseFromString(state.log, 'text/html');
+          lines = Array.from(legacy.body.children).map(function (line) {
+            return { text: line.textContent, command: line.classList.contains('cmd') };
+          });
+        }
+        log.replaceChildren();
+        (lines || []).forEach(function (line) {
+          if (typeof line.text === 'string') printLine(line.text, line.command === true);
+        });
+        history = Array.isArray(state.history) ? state.history.filter(function (entry) {
+          return typeof entry === 'string';
+        }) : [];
+        historyIndex = Number.isInteger(state.historyIndex) ? Math.max(0, Math.min(history.length, state.historyIndex)) : history.length;
+        draft = typeof state.draft === 'string' ? state.draft : '';
+        input.value = typeof state.input === 'string' ? state.input : '';
+        wizard = state.wizard && [0, 1, 2].indexOf(state.wizard.step) !== -1 && state.wizard.data ? state.wizard : null;
+        panel.hidden = !state.open;
+        tab.hidden = !!state.open;
+        if (state.open) {
+          if (!log.children.length) showHome();
+          input.focus();
+        }
+        log.scrollTop = typeof state.scrollTop === 'number' ? state.scrollTop : log.scrollHeight;
       } catch (_) {
-        sessionStorage.removeItem(STATE_KEY);
+        // Storage can be unavailable; the terminal still works in this page.
       }
     }
 
     function saveNavigationState() {
-      sessionStorage.setItem(STATE_KEY, JSON.stringify({ open: !panel.hidden, log: log.innerHTML }));
+      try {
+        sessionStorage.setItem(STATE_KEY, JSON.stringify({
+          open: !panel.hidden,
+          lines: Array.from(log.children).map(function (line) {
+            return { text: line.textContent, command: line.classList.contains('cmd') };
+          }),
+          history: history, historyIndex: historyIndex, draft: draft,
+          input: input.value, wizard: wizard, scrollTop: log.scrollTop
+        }));
+      } catch (_) {
+        // Keep navigation usable even when storage is disabled or full.
+      }
     }
 
     function tryOpen(target) {
-      var normalized = target.replace(/^\.\//, '');
-      if (normalized === 'index') normalized = 'index.html';
+      var normalized = target.toLowerCase().replace(/^(\.\/|\/)/, '');
+      if (!normalized) normalized = 'index.html';
+      if (normalized.indexOf('.') === -1) normalized += '.html';
       if (pages.indexOf(normalized) === -1) {
         printLine('No such page: ' + target);
         return;
@@ -90,20 +132,26 @@
       window.location.assign(normalized);
     }
 
-    function reason(error) {
-      return error && error.message ? error.message : String(error || 'request failed');
-    }
-
-    function sendWhatsApp(message) {
+    function sendMessage(message) {
       if (!placeholder(CALLMEBOT_PHONE) && !placeholder(CALLMEBOT_APIKEY)) {
-        var text = 'Website message from ' + message.name + ' (' + message.email + '): ' + message.message;
+        var text = 'Website message from ' + message.name + '\n' +
+          (message.email ? 'Reply to: ' + message.email + '\n' : '') + '\n' + message.message;
         var url = 'https://api.callmebot.com/whatsapp.php?phone=' + encodeURIComponent(CALLMEBOT_PHONE) +
           '&text=' + encodeURIComponent(text) + '&apikey=' + encodeURIComponent(CALLMEBOT_APIKEY);
-        return fetch(url).then(function (response) {
-          if (!response.ok) throw new Error('HTTP ' + response.status);
-          printLine('WhatsApp: sent');
-        }).catch(function (error) { printLine('WhatsApp: failed — ' + reason(error)); });
+        // This endpoint does not provide CORS response access. An opaque response
+        // confirms the request completed, not that the recipient received it.
+        // Never retry automatically: a retry could deliver the message twice.
+        return fetch(url, { mode: 'no-cors', credentials: 'omit', cache: 'no-store', keepalive: true })
+          .then(function (response) {
+            if (response.type !== 'opaque' && !response.ok) throw new Error('Request rejected');
+            printLine('sent message.');
+            saveNavigationState();
+          }).catch(function () {
+            printLine('Could not send message. Please check your connection.');
+            saveNavigationState();
+          });
       }
+      printLine('Message sending is not configured yet.');
       return Promise.resolve();
     }
 
@@ -115,37 +163,43 @@
     function continueMailWizard(value) {
       if (value.toLowerCase() === 'cancel') {
         wizard = null;
-        printLine('Mail cancelled.');
+        printLine('Message cancelled.');
         return;
       }
       if (wizard.step === 0) {
+        if (!value) { printLine('Please enter your name (or cancel):'); return; }
         wizard.data.name = value;
         wizard.step = 1;
-        printLine('Your email (or cancel):');
+        printLine('Your email (optional, for a reply — Enter to skip, or cancel):');
       } else if (wizard.step === 1) {
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          printLine('Please enter a valid email, or press Enter to skip:');
+          return;
+        }
         wizard.data.email = value;
         wizard.step = 2;
         printLine('Your message (or cancel):');
       } else {
+        if (!value) { printLine('Please enter your message (or cancel):'); return; }
         wizard.data.message = value;
         var message = wizard.data;
         wizard = null;
-        sendWhatsApp(message);
+        sendMessage(message);
       }
     }
 
     var commands = {
       help: 'Available commands: help, whoami, ls, cat <page>, open <page>, mail, clear',
       whoami: 'malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.',
-      ls: pages.join('  ') + '  robots.txt',
+      ls: pages.join('  '),
       'sudo hire --me': '[sudo] password for malte: ...not required, just send a message.'
     };
     var commandNames = Object.keys(commands).concat(['cat', 'open', 'mail', 'clear']);
 
     function execute(raw) {
       if (wizard) return continueMailWizard(raw);
-      if (raw === 'clear') { log.innerHTML = ''; return; }
-      if (raw === 'mail') { startMailWizard(); return; }
+      if (raw.toLowerCase() === 'clear') { showHome(); return; }
+      if (raw.toLowerCase() === 'mail') { startMailWizard(); return; }
       var match = /^(cat|open)\s+(.+)$/i.exec(raw);
       if (match) { tryOpen(match[2].trim()); return; }
       var reply = commands[raw.toLowerCase()];
@@ -154,7 +208,16 @@
 
     tab.addEventListener('click', open);
     closeButton.addEventListener('click', close);
+    window.addEventListener('pagehide', saveNavigationState);
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) restoreNavigationState();
+    });
+    input.addEventListener('input', saveNavigationState);
     input.addEventListener('keydown', function (event) {
+      if (wizard) {
+        if (event.key === 'Tab') event.preventDefault();
+        return;
+      }
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         if (!history.length) return;
@@ -170,21 +233,33 @@
         event.preventDefault();
         var value = input.value.toLowerCase();
         if (!value) return;
-        var matches = commandNames.filter(function (command) { return command.indexOf(value) === 0; });
-        if (matches.length === 1) input.value = matches[0];
+        var fileCommand = /^(cat|open)\s+(.*)$/i.exec(input.value);
+        var prefix = fileCommand ? fileCommand[2].replace(/^(\.\/|\/)/, '').toLowerCase() : value;
+        var pathPrefix = fileCommand ? (fileCommand[2].match(/^(\.\/|\/)/) || [''])[0] : '';
+        var matches = (fileCommand ? pages : commandNames).filter(function (entry) {
+          return entry.indexOf(prefix) === 0;
+        });
+        if (matches.length === 1) input.value = fileCommand ? fileCommand[1] + ' ' + pathPrefix + matches[0] : matches[0];
         else if (matches.length > 1) printLine(matches.join('   '));
+      }
+      if (['ArrowUp', 'ArrowDown', 'Tab'].indexOf(event.key) !== -1) {
+        input.setSelectionRange(input.value.length, input.value.length);
+        saveNavigationState();
       }
     });
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       var raw = input.value.trim();
-      if (!raw) return;
-      printLine(raw, true);
-      history.push(raw);
-      historyIndex = history.length;
-      draft = '';
-      execute(raw);
+      if (!raw && !wizard) return;
+      printLine(raw || '(skipped)', true);
+      if (!wizard) {
+        history.push(raw);
+        historyIndex = history.length;
+        draft = '';
+      }
       input.value = '';
+      execute(raw);
+      saveNavigationState();
     });
     restoreNavigationState();
   }

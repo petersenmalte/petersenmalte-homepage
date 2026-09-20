@@ -4,7 +4,7 @@ module.exports = defineConfig({
   testDir: './tests',
   fullyParallel: true,
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: 'http://127.0.0.1:4173/petersenmalte-homepage/',
     browserName: 'chromium',
     headless: true
   },
