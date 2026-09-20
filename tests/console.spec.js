@@ -18,32 +18,46 @@ async function command(input, value) {
   await input.press('Enter');
 }
 
-test('ls, open and tab completion navigate through the terminal', async ({ page }) => {
+test('ls, cd and tab completion navigate through the terminal', async ({ page }) => {
   await page.goto('./');
   const input = await openTerminal(page);
-  await expect(page.locator('#console-log')).toContainText('/\n├── index.html\n├── education.html');
+  await expect(page.locator('#console-log')).toContainText('/\n├── index\n├── education');
   await expect(page.locator('#console-log')).toContainText("Type 'help' for commands.");
   await expect(page.locator('#console-log')).not.toContainText('↑/↓ for history');
   await command(input, 'ls');
-  await expect(page.locator('#console-log')).toContainText('education.html');
+  await expect(page.locator('#console-log')).toContainText('education');
 
-  await input.fill('op');
+  await input.fill('wh');
   await input.press('Tab');
-  await expect(input).toHaveValue('open');
-  await input.fill('open /wri');
+  await expect(input).toHaveValue('whoami');
+  await input.fill('cd /wri');
   await input.press('Tab');
-  await expect(input).toHaveValue('open /writing.html');
+  await expect(input).toHaveValue('cd /writing');
   await input.press('Enter');
   await expect(page).toHaveURL(/writing\.html$/);
   await expect(page.locator('#console-panel')).toBeVisible();
 
   const nextInput = page.getByLabel('Enter command');
-  await nextInput.fill('open wo');
+  await nextInput.fill('cd wo');
   await nextInput.press('Tab');
-  await expect(nextInput).toHaveValue('open work.html');
+  await expect(nextInput).toHaveValue('cd work');
   await nextInput.press('Enter');
   await expect(page).toHaveURL(/work\.html$/);
-  await expect(page.locator('#console-log')).toContainText('open work.html');
+  await expect(page.locator('#console-log')).toContainText('cd work');
+});
+
+test('cd .. returns to index without being documented or completed', async ({ page }) => {
+  await page.goto('education.html');
+  const input = await openTerminal(page);
+  await command(input, 'help');
+  await expect(page.locator('#console-log')).not.toContainText('..');
+
+  await input.fill('cd ');
+  await input.press('Tab');
+  await expect(page.locator('#console-log')).not.toContainText('..');
+
+  await command(input, 'cd ..');
+  await expect(page).toHaveURL(/\/index\.html$/);
 });
 
 test('message wizard provides an optional reply address and can cancel', async ({ page }) => {
@@ -81,7 +95,7 @@ test('console survives commands and normal links with identical size and history
   const input = await openTerminal(page);
   const size = await page.locator('#console-panel').boundingBox();
   await command(input, 'whoami');
-  await command(input, 'open education.html');
+  await command(input, 'cd education');
   await expect(page).toHaveURL(/education\.html$/);
   await expect(page.locator('#console-panel')).toBeVisible();
   await expect(page.locator('#console-log')).toContainText('mathematician');
@@ -94,7 +108,7 @@ test('console survives commands and normal links with identical size and history
   expect(await page.locator('#console-panel').boundingBox()).toEqual(size);
   await expect(input).toHaveValue('unfinished command');
   await input.press('ArrowUp');
-  await expect(input).toHaveValue('open education.html');
+  await expect(input).toHaveValue('cd education');
   await input.press('ArrowDown');
   await expect(input).toHaveValue('unfinished command');
   await page.getByRole('link', { name: /petersenmalte\.de/i }).first().click();

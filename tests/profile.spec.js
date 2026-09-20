@@ -50,3 +50,16 @@ test('removed cat command is absent from help and cannot navigate', async ({ pag
   await expect(page.locator('#console-log')).toContainText('Command not found: cat education.html');
   await expect(page).not.toHaveURL(/education\.html$/);
 });
+
+test('renamed open command is absent from help and cannot navigate', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Open terminal' }).click();
+  const input = page.getByLabel('Enter command');
+  await input.fill('help');
+  await input.press('Enter');
+  await expect(page.locator('#console-log')).not.toContainText('open <page>');
+  await input.fill('open education');
+  await input.press('Enter');
+  await expect(page.locator('#console-log')).toContainText('Command not found: open education');
+  await expect(page).not.toHaveURL(/education\.html$/);
+});

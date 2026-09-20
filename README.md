@@ -6,7 +6,9 @@ The shared terminal (`assets/console.js` and `assets/console.css`) is included o
 every HTML page. Its visibility, log, command history, input draft and message
 wizard persist within the current browser tab via sessionStorage, including
 ordinary links and reloads. `clear` restores the page tree and help hint.
-`open` supports file completion with Tab, including `/` and `./` prefixes.
+`cd` supports file completion with Tab, including `/` and `./` prefixes. Page
+names are canonically extensionless (`cd education`, not `cd education.html`),
+though the `.html` form still resolves.
 
 `mail` collects a name, optional reply email and a message. Press Enter at the
 email prompt to skip it. The optional address is included as `Reply to:` in the
