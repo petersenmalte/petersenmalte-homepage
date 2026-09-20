@@ -110,7 +110,7 @@
     max-height:220px; overflow-y:auto; padding:12px 14px 0 14px;
     text-align:left; line-height:1.5; white-space:pre-wrap; word-break:break-word;
   }
-  #console-log .cmd::before{ content:"~$ "; opacity:0.6; }
+  #console-log .cmd .p{ opacity:0.6; }
   #console-form{ display:flex; align-items:center; padding:10px 14px 12px 14px; gap:6px; }
   #console-form span{ opacity:0.6; }
   #console-input{
@@ -159,12 +159,20 @@
     <button id="console-close" type="button" aria-label="Close console">&times;</button>
     <div id="console-log"></div>
     <form id="console-form">
-      <span>~$</span>
+      <span id="console-prompt">~$</span>
       <input id="console-input" type="text" autocomplete="off" spellcheck="false" aria-label="Enter command">
     </form>
   </div>
 
 <script>
+/* contact address, assembled at runtime instead of sitting as plain text in
+   the HTML — shared by the footer icon and the console's mail fallback */
+(function(){
+  var user = ['p','e','t','e','r','s','e','n','-','m','a','l','t','e'].join('');
+  var domain = ['g','m','x','.','n','e','t'].join('');
+  window.__contactAddress = user + '@' + domain;
+})();
+
 (function(){
   var tab = document.getElementById('console-tab');
   var panel = document.getElementById('console-panel');
@@ -172,29 +180,135 @@
   var log = document.getElementById('console-log');
   var form = document.getElementById('console-form');
   var input = document.getElementById('console-input');
+  var promptEl = document.getElementById('console-prompt');
+
+  // TODO: sign up at https://formspree.io with the address this page emails
+  // to, create a form there, and paste its endpoint below. Until then, the
+  // mail command falls back to opening a prefilled mailto: link instead of
+  // silently failing.
+  var FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+
+  // the site's pages, in one place — ls, cat/open and tab-completion all
+  // read from this instead of hard-coding a file list three times over
+  var FILES = {
+    'index.html': 'you are here',
+    'education.html': 'M.Sc. Bonn — thesis on mixed finite elements',
+    'work.html': 'backend engineering — more soon',
+    'writing.html': 'thesis, guides, notes',
+    '404.html': 'diverges on purpose',
+    'robots.txt': 'not much to see'
+  };
 
   var COMMANDS = {
-    help: "Available commands: help, whoami, ls, sudo hire --me, clear",
+    help: "Available commands: help, whoami, ls, cat <file>, mail, sudo hire --me, clear",
     whoami: "malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.",
-    ls: "index.html  404.html  robots.txt  (more to come)",
     "sudo hire --me": "[sudo] password for malte: ...not required, just send a message."
   };
-  var COMMAND_NAMES = Object.keys(COMMANDS).concat(['clear']);
+  var COMMAND_NAMES = Object.keys(COMMANDS).concat(['clear', 'ls', 'cat', 'open', 'mail']);
 
   var history = [];
   var historyIndex = 0; // === history.length means "not currently recalling"
   var draft = '';
 
+  // null outside the flow; while sending a message, tracks which field
+  // we're collecting next and what's been typed so far
+  var mailState = null;
+
   function printLine(text, isCmd){
     var line = document.createElement('div');
-    if (isCmd){ line.className = 'cmd'; }
-    line.textContent = text;
     line.style.marginBottom = '8px';
+    if (isCmd){
+      line.className = 'cmd';
+      var p = document.createElement('span');
+      p.className = 'p';
+      p.textContent = promptEl.textContent + ' ';
+      line.appendChild(p);
+      line.appendChild(document.createTextNode(text));
+    } else {
+      line.textContent = text;
+    }
     log.appendChild(line);
     log.scrollTop = log.scrollHeight;
   }
 
-  function open(){
+  function setPrompt(text){
+    promptEl.textContent = text;
+  }
+
+  function lsOutput(){
+    return Object.keys(FILES).join('  ');
+  }
+
+  function resolveFile(arg){
+    var lower = arg.toLowerCase();
+    var names = Object.keys(FILES);
+    for (var i = 0; i < names.length; i++){
+      if (names[i].toLowerCase() === lower) return names[i];
+    }
+    if (lower.indexOf('.') === -1){
+      var withHtml = lower + '.html';
+      for (var j = 0; j < names.length; j++){
+        if (names[j].toLowerCase() === withHtml) return names[j];
+      }
+    }
+    return null;
+  }
+
+  function tryOpen(verb, arg){
+    if (!arg){
+      printLine(verb + ": missing file operand");
+      return;
+    }
+    var resolved = resolveFile(arg);
+    if (resolved){
+      printLine('Opening ' + resolved + ' …');
+      setTimeout(function(){ window.location.href = resolved; }, 320);
+    } else {
+      printLine(verb + ': ' + arg + ': No such file or directory');
+    }
+  }
+
+  function startMail(){
+    mailState = { step: 'name' };
+    setPrompt('name>');
+    printLine("Let's send a message — type 'cancel' anytime to stop.");
+    printLine('Name:');
+  }
+
+  function cancelMail(){
+    mailState = null;
+    setPrompt('~$');
+    printLine('Cancelled.');
+  }
+
+  function sendMail(data){
+    printLine('Sending …');
+    if (!FORMSPREE_ENDPOINT || FORMSPREE_ENDPOINT.indexOf('YOUR_FORM_ID') !== -1){
+      var subject = encodeURIComponent('Message from petersenmalte.de');
+      var body = encodeURIComponent(
+        'From: ' + data.name + (data.email ? ' <' + data.email + '>' : '') +
+        '\n\n' + data.message
+      );
+      printLine("Not wired up to send on its own yet — opening your mail client instead.");
+      window.location.href = 'mailto:' + window.__contactAddress + '?subject=' + subject + '&body=' + body;
+      return;
+    }
+    fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name: data.name, email: data.email, message: data.message })
+    }).then(function(res){
+      if (res.ok){
+        printLine('Sent — thanks, I will get back to you.');
+      } else {
+        printLine('Could not send that. Try ' + window.__contactAddress + ' directly.');
+      }
+    }).catch(function(){
+      printLine('Could not send that. Try ' + window.__contactAddress + ' directly.');
+    });
+  }
+
+  function open_(){
     panel.hidden = false;
     tab.hidden = true;
     if (log.children.length === 0){
@@ -207,7 +321,7 @@
     tab.hidden = false;
   }
 
-  tab.addEventListener('click', open);
+  tab.addEventListener('click', open_);
   closeBtn.addEventListener('click', close);
 
   input.addEventListener('keydown', function(e){
@@ -226,14 +340,30 @@
       input.setSelectionRange(input.value.length, input.value.length);
     } else if (e.key === 'Tab'){
       e.preventDefault();
-      var val = input.value.toLowerCase();
-      if (!val) return;
-      var matches = COMMAND_NAMES.filter(function(c){ return c.indexOf(val) === 0; });
-      if (matches.length === 1){
-        input.value = matches[0];
-        input.setSelectionRange(input.value.length, input.value.length);
-      } else if (matches.length > 1){
-        printLine(matches.join('   '));
+      if (mailState) return; // typing free text, not a command — nothing to complete
+      var full = input.value;
+      var firstSpace = full.indexOf(' ');
+      if (firstSpace === -1){
+        var val = full.toLowerCase();
+        if (!val) return;
+        var matches = COMMAND_NAMES.filter(function(c){ return c.indexOf(val) === 0; });
+        if (matches.length === 1){
+          input.value = matches[0];
+          input.setSelectionRange(input.value.length, input.value.length);
+        } else if (matches.length > 1){
+          printLine(matches.join('   '));
+        }
+      } else {
+        var verb = full.slice(0, firstSpace).toLowerCase();
+        if (verb !== 'cat' && verb !== 'open') return;
+        var argPrefix = full.slice(firstSpace + 1).toLowerCase();
+        var fileMatches = Object.keys(FILES).filter(function(f){ return f.toLowerCase().indexOf(argPrefix) === 0; });
+        if (fileMatches.length === 1){
+          input.value = verb + ' ' + fileMatches[0];
+          input.setSelectionRange(input.value.length, input.value.length);
+        } else if (fileMatches.length > 1){
+          printLine(fileMatches.join('   '));
+        }
       }
     }
   });
@@ -241,18 +371,70 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var raw = input.value.trim();
+
+    if (mailState){
+      printLine(raw || '(skipped)', true);
+      history.push(raw);
+      historyIndex = history.length;
+      draft = '';
+      input.value = '';
+
+      if (raw.toLowerCase() === 'cancel'){
+        cancelMail();
+        return;
+      }
+      if (mailState.step === 'name'){
+        if (!raw){ printLine('Name?'); return; }
+        mailState.name = raw;
+        mailState.step = 'email';
+        setPrompt('email>');
+        printLine('Email (optional — press enter to skip):');
+      } else if (mailState.step === 'email'){
+        mailState.email = raw;
+        mailState.step = 'message';
+        setPrompt('message>');
+        printLine('Message:');
+      } else if (mailState.step === 'message'){
+        if (!raw){ printLine('Message?'); return; }
+        mailState.message = raw;
+        var data = mailState;
+        mailState = null;
+        setPrompt('~$');
+        sendMail(data);
+      }
+      return;
+    }
+
     if (!raw) return;
     printLine(raw, true);
     history.push(raw);
     historyIndex = history.length;
     draft = '';
+    input.value = '';
+
+    var lower = raw.toLowerCase();
     if (raw === 'clear'){
       log.innerHTML = '';
-    } else {
-      var reply = COMMANDS[raw.toLowerCase()];
-      printLine(reply || ("Command not found: " + raw + " — try 'help'"));
+      return;
     }
-    input.value = '';
+    if (lower === 'ls'){
+      printLine(lsOutput());
+      return;
+    }
+    if (lower === 'mail' || lower === 'write'){
+      startMail();
+      return;
+    }
+    var firstSpace = raw.indexOf(' ');
+    var verb = (firstSpace === -1 ? raw : raw.slice(0, firstSpace)).toLowerCase();
+    if (verb === 'cat' || verb === 'open'){
+      var arg = firstSpace === -1 ? '' : raw.slice(firstSpace + 1).trim();
+      tryOpen(verb, arg);
+      return;
+    }
+
+    var reply = COMMANDS[lower];
+    printLine(reply || ("Command not found: " + raw + " — try 'help'"));
   });
 })();
 
@@ -442,14 +624,12 @@
   footer.addEventListener('touchstart', start, { passive: true });
 })();
 
-/* contact link — address assembled at runtime instead of sitting as plain
-   text in the HTML, to deter the simplest source-scraping spam bots */
+/* contact link — reuses the address assembled at the top of the console
+   script, so the two never drift apart */
 (function(){
   var link = document.getElementById('contact-link');
   if (!link) return;
-  var user = ['p','e','t','e','r','s','e','n','-','m','a','l','t','e'].join('');
-  var domain = ['g','m','x','.','n','e','t'].join('');
-  link.href = 'mailto:' + user + '@' + domain;
+  link.href = 'mailto:' + window.__contactAddress;
 })();
 </script>
 <script src="assets/vendor/suncalc.js"></script>
