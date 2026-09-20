@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>writing — petersenmalte.de</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --ink:#211d17; --ink-dim:#6b6558;
+    --line:#ddd6c6; --accent:#b6491f; --accent-2:#2c6e64;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#161310; --ink:#eee8db; --ink-dim:#a89f8c; --line:#3a3428; --accent:#e2814f; --accent-2:#6fbfb1; }
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:20px; text-align:center;
+  }
+  .kicker{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-dim); margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--serif); font-weight:600;
+    font-size:clamp(1.8rem, 6vw, 2.6rem);
+    margin:0 0 14px;
+  }
+  p{
+    font-family:var(--sans); font-size:0.98rem; color:var(--ink-dim);
+    margin:0 0 26px; max-width:46ch; line-height:1.55;
+  }
+  .links{
+    display:flex; flex-direction:column; gap:10px;
+    font-family:var(--mono); font-size:0.88rem;
+    margin-bottom:32px;
+  }
+  .links a{
+    color:var(--accent-2); text-decoration:none;
+    border-bottom:1px solid var(--accent-2); padding-bottom:1px;
+  }
+  .links a:hover{ opacity:0.75; }
+  .links span{ color:var(--ink-dim); font-size:0.82rem; }
+  .back{
+    font-family:var(--mono); font-size:0.85rem;
+    color:var(--ink-dim); text-decoration:none;
+    border-bottom:1px solid var(--line); padding-bottom:1px;
+  }
+  .back:hover{ color:var(--accent); border-color:var(--accent); }
+</style>
+</head>
+<body>
+  <p class="kicker">writing</p>
+  <h1>Thesis, guides, and notes</h1>
+  <p>
+    What I've written up so far — starting with the thesis and a visual
+    field guide to finite element families. More to come.
+  </p>
+  <div class="links">
+    <div><a href="falk.html">convergence explorer &rarr;</a><br><span>the thesis, made interactive</span></div>
+    <div><a href="https://github.com/petersenmalte/falk-mixed-elasticity/tree/main/finite-elements-guide" target="_blank" rel="noopener noreferrer">a field guide to finite elements &rarr;</a><br><span>24-page PDF, for anyone who knows calculus but not FEM</span></div>
+  </div>
+  <a class="back" href="/">&larr; back</a>
+</body>
+</html>
