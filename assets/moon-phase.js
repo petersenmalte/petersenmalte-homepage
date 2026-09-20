@@ -46,13 +46,13 @@ export function mountMoonPhaseSymbol(container, location = MOON_LOCATION) {
   const symbol = document.createElement("span");
   symbol.className = "moon-phase";
   symbol.setAttribute("role", "img");
-  symbol.title = "Moon phase for " + location.name;
+  symbol.tabIndex = 0;
+  symbol.setAttribute("aria-describedby", "moon-phase-tooltip");
   container.appendChild(symbol);
 
   function render() {
     const state = getMoonState(new Date(), location);
     symbol.setAttribute("aria-label", state.label);
-    symbol.title = state.label;
     symbol.innerHTML =
       '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
         '<circle class="moon-phase__shadow" cx="12" cy="12" r="10"></circle>' +
@@ -60,7 +60,8 @@ export function mountMoonPhaseSymbol(container, location = MOON_LOCATION) {
           '<path class="moon-phase__light" d="' + moonPath(state.fraction, state.waxing) + '"></path>' +
         '</g>' +
         '<circle class="moon-phase__rim" cx="12" cy="12" r="10"></circle>' +
-      '</svg>';
+      '</svg>' +
+      '<span id="moon-phase-tooltip" class="moon-phase__tooltip" role="tooltip">' + state.label + '</span>';
   }
 
   render();

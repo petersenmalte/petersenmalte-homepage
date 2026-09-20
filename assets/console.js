@@ -189,18 +189,18 @@
     }
 
     var commands = {
-      help: 'Available commands: help, whoami, ls, cat <page>, open <page>, mail, clear',
+      help: 'Available commands: help, whoami, ls, open <page>, mail, clear',
       whoami: 'malte — mathematician (M.Sc. Bonn) & backend engineer. More soon.',
       ls: pages.join('  '),
       'sudo hire --me': '[sudo] password for malte: ...not required, just send a message.'
     };
-    var commandNames = Object.keys(commands).concat(['cat', 'open', 'mail', 'clear']);
+    var commandNames = Object.keys(commands).concat(['open', 'mail', 'clear']);
 
     function execute(raw) {
       if (wizard) return continueMailWizard(raw);
       if (raw.toLowerCase() === 'clear') { showHome(); return; }
       if (raw.toLowerCase() === 'mail') { startMailWizard(); return; }
-      var match = /^(cat|open)\s+(.+)$/i.exec(raw);
+      var match = /^(open)\s+(.+)$/i.exec(raw);
       if (match) { tryOpen(match[2].trim()); return; }
       var reply = commands[raw.toLowerCase()];
       printLine(reply || ('Command not found: ' + raw + " — try 'help'"));
@@ -233,7 +233,7 @@
         event.preventDefault();
         var value = input.value.toLowerCase();
         if (!value) return;
-        var fileCommand = /^(cat|open)\s+(.*)$/i.exec(input.value);
+        var fileCommand = /^(open)\s+(.*)$/i.exec(input.value);
         var prefix = fileCommand ? fileCommand[2].replace(/^(\.\/|\/)/, '').toLowerCase() : value;
         var pathPrefix = fileCommand ? (fileCommand[2].match(/^(\.\/|\/)/) || [''])[0] : '';
         var matches = (fileCommand ? pages : commandNames).filter(function (entry) {

@@ -4,7 +4,7 @@ import { extname, join, normalize } from 'node:path';
 
 const root = process.cwd();
 const prefix = '/petersenmalte-homepage/';
-const types = { '.css': 'text/css', '.html': 'text/html', '.js': 'text/javascript', '.svg': 'image/svg+xml' };
+const types = { '.css': 'text/css', '.html': 'text/html', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.pdf': 'application/pdf' };
 
 createServer((request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);

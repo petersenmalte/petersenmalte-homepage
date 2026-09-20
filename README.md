@@ -6,7 +6,7 @@ The shared terminal (`assets/console.js` and `assets/console.css`) is included o
 every HTML page. Its visibility, log, command history, input draft and message
 wizard persist within the current browser tab via sessionStorage, including
 ordinary links and reloads. `clear` restores the page tree and help hint.
-`cat` and `open` support file completion with Tab, including `/` and `./` prefixes.
+`open` supports file completion with Tab, including `/` and `./` prefixes.
 
 `mail` collects a name, optional reply email and a message. Press Enter at the
 email prompt to skip it. The optional address is included as `Reply to:` in the

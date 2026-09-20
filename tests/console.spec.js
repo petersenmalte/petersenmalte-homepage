@@ -18,7 +18,7 @@ async function command(input, value) {
   await input.press('Enter');
 }
 
-test('ls, cat/open and tab completion navigate through the terminal', async ({ page }) => {
+test('ls, open and tab completion navigate through the terminal', async ({ page }) => {
   await page.goto('./');
   const input = await openTerminal(page);
   await expect(page.locator('#console-log')).toContainText('/\n├── index.html\n├── education.html');
@@ -38,12 +38,12 @@ test('ls, cat/open and tab completion navigate through the terminal', async ({ p
   await expect(page.locator('#console-panel')).toBeVisible();
 
   const nextInput = page.getByLabel('Enter command');
-  await nextInput.fill('cat wo');
+  await nextInput.fill('open wo');
   await nextInput.press('Tab');
-  await expect(nextInput).toHaveValue('cat work.html');
+  await expect(nextInput).toHaveValue('open work.html');
   await nextInput.press('Enter');
   await expect(page).toHaveURL(/work\.html$/);
-  await expect(page.locator('#console-log')).toContainText('cat work.html');
+  await expect(page.locator('#console-log')).toContainText('open work.html');
 });
 
 test('message wizard provides an optional reply address and can cancel', async ({ page }) => {
@@ -81,7 +81,7 @@ test('console survives commands and normal links with identical size and history
   const input = await openTerminal(page);
   const size = await page.locator('#console-panel').boundingBox();
   await command(input, 'whoami');
-  await command(input, 'cat education.html');
+  await command(input, 'open education.html');
   await expect(page).toHaveURL(/education\.html$/);
   await expect(page.locator('#console-panel')).toBeVisible();
   await expect(page.locator('#console-log')).toContainText('mathematician');
@@ -93,7 +93,7 @@ test('console survives commands and normal links with identical size and history
   expect(await page.locator('#console-panel').boundingBox()).toEqual(size);
   await expect(input).toHaveValue('unfinished command');
   await input.press('ArrowUp');
-  await expect(input).toHaveValue('cat education.html');
+  await expect(input).toHaveValue('open education.html');
   await input.press('ArrowDown');
   await expect(input).toHaveValue('unfinished command');
   await page.getByRole('link', { name: /petersenmalte\.de/i }).first().click();
