@@ -77,17 +77,21 @@
     z-index:10;
   }
   #clock-times{ font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .moon-phase{ display:block; position:relative; width:18px; height:18px; color:var(--ink-dim); }
+  .moon-phase{
+    display:block; position:relative; width:18px; height:18px;
+    color:var(--ink-dim); text-decoration:none; transition:color .15s;
+  }
+  .moon-phase:hover{ color:var(--accent-2); }
   .moon-phase svg{ display:block; width:100%; height:100%; }
   .moon-phase__shadow{ fill:currentColor; opacity:0.2; }
   .moon-phase__light{ fill:currentColor; }
   .moon-phase__rim{ fill:none; stroke:currentColor; stroke-width:0.9; }
   .moon-phase__tooltip{
     position:absolute; top:calc(100% + 6px); right:-2px;
-    width:max-content; max-width:calc(100vw - 24px); padding:4px 6px; border-radius:3px;
+    width:max-content; max-width:min(30ch, calc(100vw - 24px)); padding:4px 6px; border-radius:3px;
     background:var(--ink); color:var(--bg); font:inherit; line-height:1.25;
     letter-spacing:normal; opacity:0; pointer-events:none; transform:translateY(-2px); visibility:hidden;
-    transition:opacity .15s, transform .15s, visibility .15s; white-space:nowrap; z-index:11;
+    transition:opacity .15s, transform .15s, visibility .15s; text-align:right; z-index:11;
   }
   .moon-phase:hover .moon-phase__tooltip,
   .moon-phase:focus .moon-phase__tooltip{ opacity:1; transform:translateY(0); visibility:visible; }

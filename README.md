@@ -21,6 +21,13 @@ completes. This acknowledges submission, not confirmed delivery: opaque response
 hide HTTP status and response body. Network failures display a neutral error;
 requests are never automatically retried.
 
+The moon symbol beside the clocks is a link to
+[SunMoonEarth](https://github.com/petersenmalte/SunMoonEarth), a separate
+application in its own repository, served at
+`https://petersenmalte.github.io/SunMoonEarth/`. It opens in the same tab. The
+homepage carries only the anchor: none of that application's code is loaded
+here, so the initial load is unchanged.
+
 Run tests with Node.js installed:
 
 ```sh
