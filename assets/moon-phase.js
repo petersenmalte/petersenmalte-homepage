@@ -2,7 +2,7 @@
    The symbol links to SunMoonEarth, a separate 3D application in its own
    repository. Only the anchor lives here: the homepage loads none of its code. */
 
-const APP_URL = "https://petersenmalte.github.io/SunMoonEarth/";
+const APP_URL = "https://lunarcompass.app/";
 const APP_NAME = "SunMoonEarth";
 
 const MOON_LOCATION = {

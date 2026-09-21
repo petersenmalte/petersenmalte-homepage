@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Deliberately unlisted: no navigation links here, no robots.txt entry
+     (a Disallow line would publish the path itself), not in the console's
+     page list. Reachable only by knowing this exact URL. -->
+<meta name="robots" content="noindex, nofollow">
+<title>petersenmalte.de</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --ink:#211d17; --ink-dim:#6b6558;
+    --line:#ddd6c6; --accent-2:#2c6e64;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#161310; --ink:#eee8db; --ink-dim:#a89f8c; --line:#3a3428; --accent-2:#6fbfb1; }
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--mono);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; text-align:center;
+  }
+  a{ color:var(--accent-2); }
+  p{ font-size:0.9rem; color:var(--ink-dim); }
+</style>
+</head>
+<body>
+  <p>
+    <a id="link" href="https://petersenmalte.github.io/SimpleWebsite/" rel="noopener">→</a>
+  </p>
+  <script>
+    // Small delay so the link is reachable even if redirected before it loads.
+    setTimeout(function () {
+      window.location.replace(document.getElementById('link').href);
+    }, 300);
+  </script>
+</body>
+</html>
