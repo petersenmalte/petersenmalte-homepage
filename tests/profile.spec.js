@@ -21,6 +21,23 @@ test('moon reveals the calculated illuminated percentage on hover and focus', as
   await expect(tooltip).toBeVisible();
 });
 
+test('moon links to the SunMoonEarth application in the same tab', async ({ page }) => {
+  await page.goto('./');
+  const moon = page.getByRole('link', { name: /open SunMoonEarth/ });
+  await expect(moon).toHaveAttribute('href', 'https://petersenmalte.github.io/SunMoonEarth/');
+  // Same tab: no target, and nothing that would open a new window.
+  await expect(moon).not.toHaveAttribute('target', /.+/);
+  // Reachable and activatable from the keyboard without a tabindex of its own.
+  await expect(moon).not.toHaveAttribute('tabindex', /.+/);
+  await moon.focus();
+  await expect(moon).toBeFocused();
+  await expect(page.getByRole('tooltip')).toBeVisible();
+  // The homepage itself must not pull in any of the application's code.
+  const html = await page.content();
+  expect(html).not.toContain('three');
+  expect(html).not.toContain('astronomy-engine');
+});
+
 test('education includes both thesis titles and serves the original PDF', async ({ page, request }) => {
   await page.goto('education.html');
   await expect(page.locator('main')).toContainText('Postprocessing of mixed elastic eigenvalues');
