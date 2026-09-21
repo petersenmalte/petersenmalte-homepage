@@ -24,7 +24,7 @@ test('moon reveals the calculated illuminated percentage on hover and focus', as
 test('moon links to the SunMoonEarth application in the same tab', async ({ page }) => {
   await page.goto('./');
   const moon = page.getByRole('link', { name: /open SunMoonEarth/ });
-  await expect(moon).toHaveAttribute('href', 'https://petersenmalte.github.io/SunMoonEarth/');
+  await expect(moon).toHaveAttribute('href', 'https://lunarcompass.app/');
   // Same tab: no target, and nothing that would open a new window.
   await expect(moon).not.toHaveAttribute('target', /.+/);
   // Reachable and activatable from the keyboard without a tabindex of its own.

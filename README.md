@@ -24,7 +24,7 @@ requests are never automatically retried.
 The moon symbol beside the clocks is a link to
 [SunMoonEarth](https://github.com/petersenmalte/SunMoonEarth), a separate
 application in its own repository, served at
-`https://petersenmalte.github.io/SunMoonEarth/`. It opens in the same tab. The
+`https://lunarcompass.app/`. It opens in the same tab. The
 homepage carries only the anchor: none of that application's code is loaded
 here, so the initial load is unchanged.
 
