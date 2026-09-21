@@ -1,6 +1,11 @@
 # petersenmalte-homepage
 
-Static GitHub Pages site, served under `/petersenmalte-homepage/`.
+Static GitHub Pages site, served at the custom domain
+[petersenmalte.de](https://petersenmalte.de/) (see `CNAME`). GitHub Pages
+redirects the old project-page URL,
+`https://petersenmalte.github.io/petersenmalte-homepage/`, to it
+automatically. All internal links are relative, so the site works
+unchanged under either path.
 
 The shared terminal (`assets/console.js` and `assets/console.css`) is included on
 every HTML page. Its visibility, log, command history, input draft and message
