@@ -101,12 +101,45 @@
     .moon-phase{ width:16px; height:16px; }
   }
 
+  /* Ledger — public GitHub contribution analysis, vertically centered, left edge */
+  #ledger-link{
+    position:fixed; left:20px; top:50%; transform:translateY(-50%);
+    display:block; width:20px; height:20px;
+    color:var(--ink-dim); text-decoration:none; transition:color .15s;
+    z-index:10;
+  }
+  #ledger-link:hover, #ledger-link:focus-visible{ color:var(--accent-2); }
+  #ledger-link:focus-visible{ outline:1px solid var(--accent-2); outline-offset:4px; border-radius:3px; }
+  #ledger-link svg{ display:block; width:100%; height:100%; }
+  #ledger-link__tooltip{
+    position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%) translateX(-4px);
+    width:max-content; max-width:min(28ch, calc(100vw - 80px)); padding:4px 7px; border-radius:3px;
+    background:var(--ink); color:var(--bg); font-family:var(--mono); font-size:0.75rem; line-height:1.3;
+    opacity:0; pointer-events:none; visibility:hidden;
+    transition:opacity .15s, transform .15s, visibility .15s;
+  }
+  #ledger-link:hover #ledger-link__tooltip,
+  #ledger-link:focus-visible #ledger-link__tooltip{
+    opacity:1; transform:translateY(-50%) translateX(0); visibility:visible;
+  }
+  @media (max-width:480px){
+    #ledger-link{ left:12px; width:18px; height:18px; }
+  }
+
 </style>
 <link rel="stylesheet" href="assets/console.css">
 </head>
 <body>
   <div id="progress-bar"></div>
   <div id="two-clocks"><div id="clock-times"></div></div>
+
+  <a id="ledger-link" href="https://github-account-analysis.onrender.com" target="_blank" rel="noopener noreferrer" aria-label="Ledger — public GitHub contribution analysis">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="1"/>
+      <path d="M8 8h8M8 12h8M8 16h5"/>
+    </svg>
+    <span id="ledger-link__tooltip">Ledger — public GitHub contribution analysis</span>
+  </a>
 
   <h1>Malte Petersen</h1>
 
