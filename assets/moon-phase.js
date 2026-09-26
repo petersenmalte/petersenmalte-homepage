@@ -27,9 +27,19 @@ function describeMoon(phase, fraction) {
 }
 
 function moonPath(fraction, waxing) {
-  const terminatorX = 12 + (waxing ? 1 : -1) * 10 * (1 - 2 * fraction);
-  const outerArc = waxing ? "A 10 10 0 0 1 12 22" : "A 10 10 0 0 0 12 22";
-  return "M 12 2 " + outerArc + " Q " + terminatorX.toFixed(3) + " 12 12 2 Z";
+  // The terminator, seen in orthographic projection, is a true ellipse: its
+  // horizontal radius shrinks to 0 at the quarter moons (a straight edge)
+  // and grows back to the full radius at new/full moon. A quadratic Bezier
+  // approximation undershoots badly near those extremes (it doesn't hug the
+  // circle), so an elliptical arc is used instead.
+  const r = 10;
+  const rx = (r * Math.abs(1 - 2 * fraction)).toFixed(3);
+  const outerSweep = waxing ? 1 : 0;
+  const innerSweep = fraction < 0.5 ? 1 - outerSweep : outerSweep;
+  return (
+    "M 12 2 A " + r + " " + r + " 0 0 " + outerSweep + " 12 22" +
+    " A " + rx + " " + r + " 0 0 " + innerSweep + " 12 2 Z"
+  );
 }
 
 export function getMoonState(date = new Date(), location = MOON_LOCATION) {
