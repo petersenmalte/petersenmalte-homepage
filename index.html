@@ -178,14 +178,14 @@
 (function(){
   var el = document.getElementById('clock-times');
   if (!el) return;
-  var fmtA = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
-  var fmtB = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Toronto' });
+  var fmtA = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Berlin' });
+  var fmtB = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Toronto' });
   function render(){
     var now = new Date();
     el.textContent = fmtA.format(now) + "  ·  " + fmtB.format(now);
   }
   render();
-  setInterval(render, 15000);
+  setInterval(render, 1000);
 })();
 
 /* scroll progress bar — width follows 1 - e^(-k*x), converges rather than fills linearly */
