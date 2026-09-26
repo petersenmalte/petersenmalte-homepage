@@ -46,6 +46,13 @@
     var history = [];
     var historyIndex = 0;
     var draft = '';
+    var stack = [];
+
+    function currentPageName() {
+      var file = window.location.pathname.split('/').pop() || 'index.html';
+      var match = resolvePage(file);
+      return match ? match.name : 'index';
+    }
 
     function printLine(text, isCommand) {
       var line = document.createElement('div');
@@ -80,7 +87,7 @@
     function restoreNavigationState() {
       try {
         var raw = sessionStorage.getItem(STATE_KEY);
-        if (!raw) return;
+        if (!raw) throw null;
         var state = JSON.parse(raw);
         // Read old snapshots as inert text; never inject storage as live HTML.
         var lines = state.lines;
@@ -101,6 +108,9 @@
         draft = typeof state.draft === 'string' ? state.draft : '';
         input.value = typeof state.input === 'string' ? state.input : '';
         wizard = state.wizard && [0, 1, 2].indexOf(state.wizard.step) !== -1 && state.wizard.data ? state.wizard : null;
+        stack = Array.isArray(state.stack) ? state.stack.filter(function (entry) {
+          return typeof entry === 'string';
+        }) : [];
         panel.hidden = !state.open;
         tab.hidden = !!state.open;
         if (state.open) {
@@ -111,6 +121,11 @@
       } catch (_) {
         // Storage can be unavailable; the terminal still works in this page.
       }
+      // Track the path taken through pages so 'cd ..' can retrace it,
+      // regardless of whether navigation happened via the terminal or a link.
+      var here = currentPageName();
+      if (!stack.length) stack = [here];
+      else if (stack[stack.length - 1] !== here) stack.push(here);
     }
 
     function saveNavigationState() {
@@ -121,7 +136,7 @@
             return { text: line.textContent, command: line.classList.contains('cmd') };
           }),
           history: history, historyIndex: historyIndex, draft: draft,
-          input: input.value, wizard: wizard, scrollTop: log.scrollTop
+          input: input.value, wizard: wizard, scrollTop: log.scrollTop, stack: stack
         }));
       } catch (_) {
         // Keep navigation usable even when storage is disabled or full.
@@ -130,7 +145,7 @@
 
     function resolvePage(target) {
       var normalized = target.toLowerCase().replace(/^(\.\/|\/)/, '').trim();
-      if (!normalized || normalized === '.' || normalized === '..') normalized = 'index';
+      if (!normalized || normalized === '.') normalized = 'index';
       normalized = normalized.replace(/\.html$/, '');
       for (var i = 0; i < PAGES.length; i++) {
         if (PAGES[i].name === normalized) return PAGES[i];
@@ -139,7 +154,16 @@
     }
 
     function tryCd(target) {
-      var match = resolvePage(target);
+      var normalized = target.toLowerCase().replace(/^(\.\/|\/)/, '').trim();
+      var match;
+      if (normalized === '..') {
+        // Walk back along the path actually taken to get here, not always to index.
+        var previous = stack.length > 1 ? stack[stack.length - 2] : 'index';
+        match = resolvePage(previous);
+        if (stack.length > 1) stack.pop();
+      } else {
+        match = resolvePage(target);
+      }
       if (!match) {
         printLine('No such page: ' + target);
         return;
