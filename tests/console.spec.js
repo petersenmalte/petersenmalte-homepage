@@ -60,6 +60,21 @@ test('cd .. returns to index without being documented or completed', async ({ pa
   await expect(page).toHaveURL(/\/index\.html$/);
 });
 
+test('cd .. retraces the path actually taken instead of always jumping to index', async ({ page }) => {
+  await page.goto('education.html');
+  let input = await openTerminal(page);
+  await command(input, 'cd work');
+  await expect(page).toHaveURL(/work\.html$/);
+
+  input = page.getByLabel('Enter command');
+  await command(input, 'cd ..');
+  await expect(page).toHaveURL(/education\.html$/);
+
+  input = page.getByLabel('Enter command');
+  await command(input, 'cd ..');
+  await expect(page).toHaveURL(/\/index\.html$/);
+});
+
 test('message wizard provides an optional reply address and can cancel', async ({ page }) => {
   const requests = [];
   await page.addInitScript(() => {
