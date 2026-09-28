@@ -133,6 +133,18 @@
     #ledger-link{ left:12px; width:18px; height:18px; }
   }
 
+  /* Bike icon, bottom right — just the icon, nothing behind it yet */
+  #bike-icon{
+    position:fixed; right:20px; bottom:20px;
+    display:block; width:20px; height:20px;
+    color:var(--ink-dim);
+    z-index:10;
+  }
+  #bike-icon svg{ display:block; width:100%; height:100%; }
+  @media (max-width:480px){
+    #bike-icon{ right:12px; bottom:12px; width:18px; height:18px; }
+  }
+
 </style>
 <link rel="stylesheet" href="assets/console.css">
 </head>
@@ -147,6 +159,15 @@
     </svg>
     <span id="ledger-link__tooltip">Ledger — public GitHub contribution analysis</span>
   </a>
+
+  <span id="bike-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="5.5" cy="17.5" r="3.5"/>
+      <circle cx="18.5" cy="17.5" r="3.5"/>
+      <path d="M5.5 17.5 10 9h4l4.5 8.5M10 9 8 6H6"/>
+      <path d="M10 9l3 5.5h5.5"/>
+    </svg>
+  </span>
 
   <h1>Malte Petersen</h1>
 
