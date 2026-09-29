@@ -132,3 +132,31 @@ test('ibex photo is served and stays small enough for a homepage', async ({ page
   expect(response.status()).toBe(200);
   expect((await response.body()).length).toBeLessThan(150 * 1024);
 });
+
+test('the corner with the icons sits outside the footer hover area', async ({ page }) => {
+  await page.goto('./');
+  const mesh = page.locator('#sigma-sim');
+  const footer = await page.locator('footer').boundingBox();
+
+  // The footer used to span the full width, so its hover area covered the whole
+  // bottom strip: a cursor on its way to the bike or the ibex, or resting beside
+  // them, started the mesh even though the icons themselves paint above it.
+  for (const selector of ['#bike-icon', '#ibex']) {
+    const icon = await page.locator(selector).boundingBox();
+    const overlaps =
+      footer.x < icon.x + icon.width && icon.x < footer.x + footer.width &&
+      footer.y < icon.y + icon.height && icon.y < footer.y + footer.height;
+    expect(overlaps, `${selector} must not sit inside the footer`).toBe(false);
+
+    // Approach it the way a cursor does, along the bottom of the window.
+    const y = icon.y + icon.height / 2;
+    for (let x = footer.x + footer.width + 60; x >= icon.x - 12; x -= 20) {
+      await page.mouse.move(x, y);
+    }
+    expect(await mesh.evaluate(el => getComputedStyle(el).opacity)).toBe('0');
+  }
+
+  // The footer itself still reveals the mesh.
+  await page.locator('#falk-link').hover();
+  await expect(mesh).toHaveCSS('opacity', '1');
+});
