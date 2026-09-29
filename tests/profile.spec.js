@@ -97,3 +97,38 @@ test('the unlisted nivedita page is reachable but linked nowhere', async ({ page
     expect(content.toLowerCase()).not.toContain('nivedita');
   }
 });
+
+test('ibex keeps its photo hidden until hover, tap or focus', async ({ page }) => {
+  await page.goto('./');
+  const ibex = page.getByRole('button', { name: /ibex/i });
+  const card = page.locator('#ibex-card');
+  const photo = card.locator('img');
+  await expect(card).toBeHidden();
+  await expect(ibex).toHaveAttribute('aria-expanded', 'false');
+
+  await ibex.hover();
+  await expect(card).toBeVisible();
+  // The photo must be inside the viewport rather than clipped by the left edge.
+  const box = await card.boundingBox();
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width);
+  await expect(photo).toHaveAttribute('alt', /.+/);
+
+  // Touch devices have no hover: a tap toggles the card and a second one closes it.
+  await page.mouse.move(0, 0);
+  await expect(card).toBeHidden();
+  await ibex.click();
+  await expect(ibex).toHaveAttribute('aria-expanded', 'true');
+  await page.mouse.move(0, 0);
+  await expect(card).toBeVisible();
+  await ibex.click();
+  await expect(ibex).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('ibex photo is served and stays small enough for a homepage', async ({ page, request }) => {
+  await page.goto('./');
+  const src = await page.locator('#ibex-card img').getAttribute('src');
+  const response = await request.get(new URL(src, page.url()).toString());
+  expect(response.status()).toBe(200);
+  expect((await response.body()).length).toBeLessThan(150 * 1024);
+});
