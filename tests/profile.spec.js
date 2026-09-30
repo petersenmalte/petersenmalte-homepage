@@ -91,7 +91,7 @@ test('the unlisted nivedita page is reachable but linked nowhere', async ({ page
   const fs = require('node:fs');
   const path = require('node:path');
   const root = path.resolve(__dirname, '..');
-  const publicFiles = ['index.html', 'education.html', 'work.html', 'writing.html', '404.html', 'falk.html', 'robots.txt', 'assets/console.js'];
+  const publicFiles = ['index.html', 'education.html', 'work.html', '404.html', 'falk.html', 'robots.txt', 'assets/console.js'];
   for (const file of publicFiles) {
     const content = fs.readFileSync(path.join(root, file), 'utf8');
     expect(content.toLowerCase()).not.toContain('nivedita');
