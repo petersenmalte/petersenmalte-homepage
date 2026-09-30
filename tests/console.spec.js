@@ -30,11 +30,11 @@ test('ls, cd and tab completion navigate through the terminal', async ({ page })
   await input.fill('wh');
   await input.press('Tab');
   await expect(input).toHaveValue('whoami');
-  await input.fill('cd /wri');
+  await input.fill('cd /ed');
   await input.press('Tab');
-  await expect(input).toHaveValue('cd /writing');
+  await expect(input).toHaveValue('cd /education');
   await input.press('Enter');
-  await expect(page).toHaveURL(/writing\.html$/);
+  await expect(page).toHaveURL(/education\.html$/);
   await expect(page.locator('#console-panel')).toBeVisible();
 
   const nextInput = page.getByLabel('Enter command');
@@ -150,7 +150,6 @@ test('a saved closed terminal state restores its log without opening the panel',
 for (const entry of [
   { pathname: 'education.html', name: /back/i },
   { pathname: 'work.html', name: /back/i },
-  { pathname: 'writing.html', name: /back/i },
   { pathname: '404.html', name: /back to regularization/i },
   { pathname: 'falk.html', name: /petersenmalte\.de/i }
 ]) {
@@ -258,7 +257,7 @@ test('terminal fits a mobile viewport with the same dimensions on every page', a
   expect(size.x).toBeGreaterThanOrEqual(0);
   expect(size.x + size.width).toBeLessThanOrEqual(320);
   expect(size.y + size.height).toBeLessThanOrEqual(568);
-  for (const file of ['education.html', 'work.html', 'writing.html', 'falk.html', '404.html', 'index.html']) {
+  for (const file of ['education.html', 'work.html', 'falk.html', '404.html', 'index.html']) {
     await page.goto(file);
     await expect(page.locator('#console-panel')).toBeVisible();
     expect(await page.locator('#console-panel').boundingBox()).toEqual(size);
