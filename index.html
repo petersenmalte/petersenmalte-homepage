@@ -137,6 +137,20 @@
     #ledger-link{ left:12px; width:18px; height:18px; }
   }
 
+  /* Globe, top left — links to Learn the World */
+  #globe-link{
+    position:fixed; left:20px; top:16px;
+    display:block; width:22px; height:22px;
+    color:var(--ink-dim); text-decoration:none; transition:color .15s;
+    z-index:10;
+  }
+  #globe-link:hover, #globe-link:focus-visible{ color:var(--accent-2); }
+  #globe-link:focus-visible{ outline:1px solid var(--accent-2); outline-offset:4px; border-radius:3px; }
+  #globe-link svg{ display:block; width:100%; height:100%; }
+  @media (max-width:480px){
+    #globe-link{ left:12px; top:12px; width:20px; height:20px; }
+  }
+
   /* Bike icon, bottom left — just the icon, nothing behind it yet */
   #bike-icon{
     position:fixed; left:20px; bottom:20px;
@@ -196,6 +210,14 @@
 <body>
   <div id="progress-bar"></div>
   <div id="two-clocks"><div id="clock-times"></div></div>
+
+  <a id="globe-link" href="https://petersenmalte.github.io/learn-the-world/" target="_blank" rel="noopener noreferrer" aria-label="Learn the World" title="Learn the World">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.5"/>
+      <ellipse cx="12" cy="12" rx="4.2" ry="9.5"/>
+      <path d="M2.5 12h19M4 7h16M4 17h16"/>
+    </svg>
+  </a>
 
   <a id="ledger-link" href="https://github-account-analysis.onrender.com" target="_blank" rel="noopener noreferrer" aria-label="Ledger — public GitHub contribution analysis">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
