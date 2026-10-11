@@ -77,8 +77,8 @@
 
   // ---- "Why?": every explanation has a plain sentence (short) and a precise layer (detail, theorem) ----
   const DECK = "../index.html#/";
-  // n = number of the content slide in the brief (the deck's title slide is #/0)
-  const slide = (n, title) => ({ label: title, href: DECK + n });
+  // id = the slide's id in web/deck/index.qmd (stable when slides are added or reordered)
+  const slide = (id, title) => ({ label: title, href: DECK + id });
   const MODE_WHY = {
     none: "No protection is switched on, so nothing is checked.",
     "cedar-only": "Cedar allowed this single call, and nothing remembers where the data came from.",
@@ -91,38 +91,38 @@
       const r = resp.reason;
       if (r === "cedar") return { tone: "blocked", short: "Cedar says no: this role has no permission for this step.",
         detail: `Cedar denied ${name} for the agent's role. Cedar judges each call on its own (role and action); nothing is proven about Cedar itself.`,
-        slide: slide(2, "What Cedar checks per call") };
+        slide: slide("cedar", "What Cedar checks per call") };
       if (r.startsWith("flow: context not readable")) return { tone: "blocked", short: "TenantFlow blocks it: this agent carries data that the receiver may not see.",
         detail: "Monitor rule for call: every observer of the tool must be allowed to read the agent's context label. The label comes from where the data was read, not from what it says.",
-        theorem: "Model.isolation", slide: slide(6, "The invariant as a formula") };
+        theorem: "Model.isolation", slide: slide("invariant", "The invariant as a formula") };
       if (r.startsWith("flow: tool requires trusted")) return { tone: "blocked", short: "TenantFlow blocks it: this tool needs trusted input, and the agent has read untrusted data.",
         detail: "Monitor rule for call: a tool with needsTrusted requires an integrity-trusted context. The registry marks that source untrusted, and labels cover the labels of all sources, integrity included. That a label written inside the data is never read is by construction and tested, not a theorem.",
-        theorem: "Model.isolation_int", also: "Model.no_launder", slide: slide(5, "The forgery attack") };
+        theorem: "Model.isolation_int", also: "Model.no_launder", slide: slide("forgery", "The forgery attack") };
       if (r.startsWith("flow: tainted")) return { tone: "blocked", short: "TenantFlow blocks it: this agent has read another tenant's data and may not write to the shared index.",
-        detail: "Monitor rule for write: the agent's context must be readable by its own tenant. Whatever is written keeps the writer's label, which covers all its sources.", theorem: "Model.no_launder", slide: slide(4, "Labels") };
-      if (r.startsWith("fides:")) return { tone: "blocked", short: "FIDES blocks it: it considers the context untrusted.", detail: "FIDES 1.5.0 label logic (re-implemented): needs-trusted tools refuse an untrusted context.", slide: slide(5, "The forgery attack") };
+        detail: "Monitor rule for write: the agent's context must be readable by its own tenant. Whatever is written keeps the writer's label, which covers all its sources.", theorem: "Model.no_launder", slide: slide("labels", "Labels") };
+      if (r.startsWith("fides:")) return { tone: "blocked", short: "FIDES blocks it: it considers the context untrusted.", detail: "FIDES 1.5.0 label logic (re-implemented): needs-trusted tools refuse an untrusted context.", slide: slide("forgery", "The forgery attack") };
       return { tone: "blocked", short: `Not possible: ${r}.`, detail: `Monitor precondition: ${r}.` };
     }
     if (ctx.leak && ctx.goal === "forgedPay") return { tone: "leak", short: "Allowed – Payments just acted on untrusted data from outside. " + MODE_WHY[mode],
-      detail: "The payment tool requires trusted input, but the agent's context depends on an untrusted source (ground truth).", slide: slide(5, "The forgery attack") };
+      detail: "The payment tool requires trusted input, but the agent's context depends on an untrusted source (ground truth).", slide: slide("forgery", "The forgery attack") };
     if (ctx.leak) return { tone: "leak", short: "Allowed – and that was the leak. " + MODE_WHY[mode],
-      detail: "Every single step passed the active checks. The data now reached the other side.", slide: slide(3, "Three allowed calls, one leak") };
+      detail: "Every single step passed the active checks. The data now reached the other side.", slide: slide("sequence", "Three allowed calls, one leak") };
     if (mode === "tenantflow" && act.op === "query") return { tone: "ok", short: "Allowed. The search only returns entries this tenant may read.",
-      detail: "Only documents whose label is readable by the agent's tenant are ranked; the agent's label becomes the join of what it received.", theorem: "Model.noninterference", slide: slide(4, "Labels") };
+      detail: "Only documents whose label is readable by the agent's tenant are ranked; the agent's label becomes the join of what it received.", theorem: "Model.noninterference", slide: slide("labels", "Labels") };
     if (mode === "tenantflow" && act.op === "write") return { tone: "ok", short: "Allowed. The entry keeps the writer's colour.",
-      detail: "The document is stored with the writer's context label; whoever reads it later inherits that label.", theorem: "Model.no_launder", slide: slide(4, "Labels") };
+      detail: "The document is stored with the writer's context label; whoever reads it later inherits that label.", theorem: "Model.no_launder", slide: slide("labels", "Labels") };
     if (mode === "tenantflow" && act.op === "delegate") return { tone: "ok", short: "Allowed. The helper starts with the same colour as its parent.",
-      detail: "A child's context label equals its parent's at creation, and labels only grow.", theorem: "Model.child_ctx_eq", slide: slide(4, "Labels") };
+      detail: "A child's context label equals its parent's at creation, and labels only grow.", theorem: "Model.child_ctx_eq", slide: slide("labels", "Labels") };
     if (mode === "tenantflow" && act.op === "call" && resp.kind === "payload") return { tone: "ok", short: "Allowed. The agent now carries the colour of what it read.",
-      detail: "The result's label comes from the tool registry and is joined into the agent's context label.", theorem: "Model.no_launder", slide: slide(4, "Labels") };
-    return { tone: "ok", short: "Allowed.", detail: mode === "tenantflow" ? "All checks passed." : MODE_WHY[mode], slide: slide(2, "What Cedar checks per call") };
+      detail: "The result's label comes from the tool registry and is joined into the agent's context label.", theorem: "Model.no_launder", slide: slide("labels", "Labels") };
+    return { tone: "ok", short: "Allowed.", detail: mode === "tenantflow" ? "All checks passed." : MODE_WHY[mode], slide: slide("cedar", "What Cedar checks per call") };
   }
 
   function explainFiltered(mode, doc, t) {
     const tenant = { bank: "the bank", insure: "the insurer" }[t] || t;
     return { tone: "blocked", short: `The search did not return it: this entry is not readable by ${tenant}.`,
       detail: `TenantFlow filters the shared index per tenant: the entry is labelled ${[...doc.label.owners].join(", ") || "no owner"}. The search ran (and was allowed), but only entries readable by ${tenant} were ranked.`,
-      theorem: "Model.noninterference", slide: slide(3, "Three allowed calls, one leak") };
+      theorem: "Model.noninterference", slide: slide("sequence", "Three allowed calls, one leak") };
   }
 
   const api = { leaked, forgedPay, won, fuzz, replay, explain, explainFiltered, rng };
