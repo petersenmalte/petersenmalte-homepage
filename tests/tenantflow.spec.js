@@ -51,3 +51,30 @@ test('the published build records the tenantflow revision it came from', async (
   expect(response.status()).toBe(200);
   expect((await response.text()).trim()).toMatch(/^[0-9a-f]{7,40}$/);
 });
+
+test('the shield icon on the index opens the project page in the same tab', async ({ page }) => {
+  await page.goto('./');
+  const link = page.locator('#tenantflow-link');
+  await expect(link).toBeVisible();
+  await expect(link).not.toHaveAttribute('target', /.+/);
+  await link.hover();
+  await expect(page.locator('#tenantflow-link__tooltip')).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(/tenantflow\.html$/);
+});
+
+for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+  test(`the shield icon overlaps no other element at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('./');
+    const box = await page.locator('#tenantflow-link').boundingBox();
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    for (const selector of ['#two-clocks', '#ibex', 'h1', 'footer', '#console-tab']) {
+      const other = await page.locator(selector).boundingBox();
+      if (!other) continue;
+      const overlaps = box.x < other.x + other.width && other.x < box.x + box.width &&
+        box.y < other.y + other.height && other.y < box.y + box.height;
+      expect(overlaps, `${selector} overlaps the icon`).toBe(false);
+    }
+  });
+}

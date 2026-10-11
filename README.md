@@ -35,7 +35,7 @@ here, so the initial load is unchanged.
 
 `tenantflow.html` is the project page for
 [TenantFlow](https://github.com/petersenmalte/tenantflow), reachable via `cd tenantflow`
-in the terminal (like `education` and `work`, it is not linked from the index).
+in the terminal and via the shield icon at the right edge of the index (mirroring the ledger icon on the left).
 `projects/tenantflow/` is a **build copied from that repository**, not edited here:
 the Quarto slide deck (`index.html`) with the browser game in `game/`. Update it from
 a tenantflow checkout with `web/publish-homepage.sh <path to this repo>`; the file
