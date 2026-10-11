@@ -7,6 +7,7 @@
     { name: 'index', file: 'index.html' },
     { name: 'education', file: 'education.html' },
     { name: 'work', file: 'work.html' },
+    { name: 'tenantflow', file: 'tenantflow.html' },
     { name: 'falk', file: 'falk.html' },
     { name: '404', file: '404.html' }
   ];

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leak the Vault</title>
+<meta name="description" content="Play a compromised AI agent and try to move a bank's data to an insurer. Switch the protection between off, Cedar, FIDES and TenantFlow.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="wrap">
+  <div class="title-row">
+    <h1>Leak the Vault</h1>
+    <p class="tagline">A bank and an insurer share one AI platform. You are a hijacked agent. Get the bank's data to the insurer.</p>
+  </div>
+  <nav id="levels" class="levels" aria-label="Levels"></nav>
+  <div class="mode-row">
+    <fieldset id="modes" class="modes"></fieldset>
+    <p id="mode-note" class="mode-note"></p>
+  </div>
+</header>
+<main class="wrap">
+  <section id="mission" class="mission" aria-label="Mission"></section>
+  <div id="board" class="board-host"></div>
+  <section id="feedback" class="feedback" aria-live="polite"></section>
+  <section id="result" class="result" hidden aria-live="polite"></section>
+  <section id="sandbox" class="sandbox" hidden></section>
+  <section class="legend small">
+    <span class="chip lab-bank" aria-hidden="true">bank data</span>
+    <span class="chip lab-insure" aria-hidden="true">insurer data</span>
+    <span class="chip lab-mixed" aria-hidden="true">both</span>
+    <span class="chip lab-nobody untrusted" aria-hidden="true">untrusted</span>
+    <span class="muted">Colours show where data comes from. Only TenantFlow acts on them.</span>
+  </section>
+</main>
+<footer class="wrap small muted">
+  <p>Runs entirely in your browser; all data is made up. The monitor is a JavaScript port of <code>Exec.step</code>, which is proven to implement the Lean model,
+  tested against the Lean oracle on 2 400 random scenarios. Guarantees hold in the Lean model under the assumptions of the
+  <a href="https://github.com/petersenmalte/tenantflow/blob/main/docs/spec.md">spec</a> (§9, A1–A8: trusted session, adapter and tool registry, complete mediation, stateless tools, no side channels, …).
+  "FIDES" is our re-implementation of the label logic of agent-framework-core 1.5.0.
+  <a href="https://github.com/petersenmalte/tenantflow">Source</a> · <a href="../index.html">Slides</a></p>
+</footer>
+<script src="src/monitor.js"></script>
+<script src="src/levels.js"></script>
+<script src="src/rules.js"></script>
+<script src="src/theorems.js"></script>
+<script src="src/play.js"></script>
+<script src="src/board.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>

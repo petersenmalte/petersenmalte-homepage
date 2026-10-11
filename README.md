@@ -33,6 +33,16 @@ application in its own repository, served at
 homepage carries only the anchor: none of that application's code is loaded
 here, so the initial load is unchanged.
 
+`tenantflow.html` is the project page for
+[TenantFlow](https://github.com/petersenmalte/tenantflow), reachable via `cd tenantflow`
+in the terminal (like `education` and `work`, it is not linked from the index).
+`projects/tenantflow/` is a **build copied from that repository**, not edited here:
+the Quarto slide deck (`index.html`) with the browser game in `game/`. Update it from
+a tenantflow checkout with `web/publish-homepage.sh <path to this repo>`; the file
+`projects/tenantflow/REVISION` names the tenantflow commit it was built from. Source
+maps are left out. The deck loads MathJax from a CDN; everything else is local.
+`tests/tenantflow.spec.js` checks that the copy is complete and its links resolve.
+
 Run tests with Node.js installed:
 
 ```sh
