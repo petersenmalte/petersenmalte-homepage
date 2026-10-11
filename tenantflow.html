@@ -63,17 +63,24 @@
 </style>
 <link rel="stylesheet" href="assets/console.css">
 <link rel="stylesheet" href="assets/profile.css">
-<style>.profile .links{margin-bottom:24px}</style>
+<style>.profile .links{margin-bottom:24px}
+.profile .glance{margin:0 0 8px;padding-left:1.1em;font-size:.92rem;line-height:1.55;color:var(--ink-dim)}
+.profile .glance li{margin:0 0 6px}.profile .glance b{color:var(--ink)}</style>
 </head>
 <body class="profile">
 <main>
   <p class="kicker">project</p>
   <h1>TenantFlow</h1>
-  <p class="thesis">Tenant isolation for AI agents on shared infrastructure, with machine-checked proofs.</p>
-  <p>A bank and an insurer run their AI agents on one platform and search one shared RAG index. A per-call policy
-  (Cedar) checks each tool call on its own, so three individually allowed calls can still move the bank&#8217;s data to
-  the insurer: read it, write it to the shared index, let the insurer search for it. TenantFlow adds an
-  information-flow monitor with tenant labels that follow the data and cannot be forged by the data.</p>
+  <p class="thesis">Cedar checks each AI agent call on its own. TenantFlow stops the leaks that happen across calls,
+  with a Lean proof of isolation.</p>
+  <ul class="glance">
+    <li><b>Problem:</b> a bank and an insurer share one AI platform and one search index. Three calls, each allowed by
+    Cedar (read vault, write to index, search), move the bank&#8217;s data to the insurer.</li>
+    <li><b>TenantFlow:</b> tenant labels follow the data and cannot be forged by it; the insurer&#8217;s search never
+    returns the bank&#8217;s entry.</li>
+    <li><b>Evidence:</b> benchmark leaks 5/5 &rarr; 0/5, label forgeries 5/5 &rarr; 0/5, legitimate tasks 8/8 &rarr; 8/8
+    (Cedar only &rarr; with TenantFlow); isolation proven in Lean 4 (<code>Model.isolation</code>, assumptions below).</li>
+  </ul>
   <div class="links">
     <a id="tenantflow-game" href="projects/tenantflow/game/index.html">play &#8220;Leak the Vault&#8221; &rarr;</a>
     <a id="tenantflow-deck" href="projects/tenantflow/index.html">slides &rarr;</a>
